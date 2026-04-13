@@ -10,7 +10,9 @@ import {
   FolderOpen, 
   HelpCircle, 
   LogOut,
-  GraduationCap
+  GraduationCap,
+  Settings,
+  User
 } from "lucide-react";
 
 export default function Sidebar() {
@@ -25,10 +27,11 @@ export default function Sidebar() {
   const navItems = [
     { path: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
     { path: "/courses", icon: BookOpen, label: "Courses" },
-    { path: "/students", icon: Users, label: "Students" },
+    { path: "/profile", icon: User, label: "Profile" },
     { path: "/analytics", icon: BarChart3, label: "Analytics" },
     { path: "/calendar", icon: Calendar, label: "Calendar" },
     { path: "/resources", icon: FolderOpen, label: "Resources" },
+    { path: "/settings", icon: Settings, label: "Settings" },
   ];
 
   return (
