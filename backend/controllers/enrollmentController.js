@@ -24,9 +24,10 @@ const enrollCourse = async (req, res) => {
       return res.status(400).json({ message: 'Already enrolled in this course' });
     }
 
-    // Determine payment status
+    // Determine payment status and method
     const isFreeCourse = course.price === 0 || amount === 0;
     const paymentStatus = isFreeCourse ? 'completed' : (paymentMethod ? 'completed' : 'pending');
+    const paymentMethodValue = isFreeCourse ? 'free' : (paymentMethod || null);
 
     // Create enrollment with payment info
     const enrollment = await Enrollment.create({
@@ -36,7 +37,7 @@ const enrollCourse = async (req, res) => {
         amount: amount || course.price || 0,
         currency: 'USD',
         status: paymentStatus,
-        method: paymentMethod || (isFreeCourse ? 'free' : 'pending'),
+        method: paymentMethodValue,
         transactionId: transactionId || null,
         paidAt: paymentStatus === 'completed' ? Date.now() : null,
       },
@@ -191,6 +192,62 @@ const updatePaymentStatus = async (req, res) => {
   }
 };
 
+// @desc    Admin assign course to user
+// @route   POST /api/enrollments/admin-assign
+// @access  Private/Admin
+const adminAssignCourse = async (req, res) => {
+  try {
+    const { userId, courseId } = req.body;
+
+    // Check if course exists
+    const course = await Course.findById(courseId);
+    if (!course) {
+      return res.status(404).json({ message: 'Course not found' });
+    }
+
+    // Check if user exists
+    const User = require('../models/User');
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Check if already enrolled
+    const alreadyEnrolled = await Enrollment.findOne({
+      student: userId,
+      course: courseId,
+    });
+
+    if (alreadyEnrolled) {
+      return res.status(400).json({ message: 'User is already enrolled in this course' });
+    }
+
+    // Create enrollment (free/admin assignment)
+    const enrollment = await Enrollment.create({
+      student: userId,
+      course: courseId,
+      payment: {
+        amount: 0,
+        currency: 'USD',
+        status: 'completed',
+        method: 'admin-assigned',
+        paidAt: Date.now(),
+      },
+    });
+
+    // Add student to course enrolled students
+    course.enrolledStudents.push(userId);
+    await course.save();
+
+    res.status(201).json({
+      message: 'Course assigned successfully',
+      enrollment: await enrollment.populate('course', 'title description thumbnail').populate('student', 'name email'),
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   enrollCourse,
   getMyEnrollments,
@@ -198,4 +255,5 @@ module.exports = {
   getCourseStudents,
   getAllEnrollments,
   updatePaymentStatus,
+  adminAssignCourse,
 };

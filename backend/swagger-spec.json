@@ -19,6 +19,7 @@
   "tags": [
     { "name": "Authentication APIs", "description": "User registration and login for Students and Instructors" },
     { "name": "Admin Authentication APIs", "description": "Admin-only registration and login endpoints" },
+    { "name": "Admin APIs", "description": "Admin-only user management and CRUD operations" },
     { "name": "User APIs", "description": "User profile management" },
     { "name": "Course APIs", "description": "Course management - Public access for viewing, Admin only for create/update/delete" },
     { "name": "Enrollment APIs", "description": "Student course enrollment and my courses" }
@@ -280,6 +281,89 @@
         "responses": {
           "200": { "description": "List of enrolled courses" },
           "401": { "description": "Not authorized" }
+        }
+      }
+    },
+    "/api/admin/users": {
+      "get": {
+        "summary": "GET /admin/users - Get All Users (Admin)",
+        "tags": ["Admin APIs"],
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "List of all users" },
+          "401": { "description": "Not authorized" },
+          "403": { "description": "Admin only" }
+        }
+      },
+      "post": {
+        "summary": "POST /admin/users - Create User (Admin)",
+        "tags": ["Admin APIs"],
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["name", "email", "password"],
+                "properties": {
+                  "name": { "type": "string" },
+                  "email": { "type": "string" },
+                  "password": { "type": "string" },
+                  "role": { "type": "string", "enum": ["student", "instructor", "admin"] }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "User created" },
+          "401": { "description": "Not authorized" },
+          "403": { "description": "Admin only" }
+        }
+      }
+    },
+    "/api/admin/users/{id}": {
+      "put": {
+        "summary": "PUT /admin/users/:id - Update User (Admin)",
+        "tags": ["Admin APIs"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "in": "path", "name": "id", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string" },
+                  "email": { "type": "string" },
+                  "role": { "type": "string", "enum": ["student", "instructor", "admin"] }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "User updated" },
+          "401": { "description": "Not authorized" },
+          "403": { "description": "Admin only" },
+          "404": { "description": "User not found" }
+        }
+      },
+      "delete": {
+        "summary": "DELETE /admin/users/:id - Delete User (Admin)",
+        "tags": ["Admin APIs"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "in": "path", "name": "id", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "User deleted" },
+          "401": { "description": "Not authorized" },
+          "403": { "description": "Admin only" },
+          "404": { "description": "User not found" }
         }
       }
     }

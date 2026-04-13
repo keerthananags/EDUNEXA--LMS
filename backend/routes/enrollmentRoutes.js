@@ -5,8 +5,9 @@ const {
   getMyEnrollments,
   updateProgress,
   getCourseStudents,
+  adminAssignCourse,
 } = require('../controllers/enrollmentController');
-const { protect, instructorOrAdmin } = require('../middleware/auth');
+const { protect, adminOnly, instructorOrAdmin } = require('../middleware/auth');
 
 /**
  * @swagger
@@ -156,5 +157,41 @@ router.put('/:id/progress', protect, updateProgress);
  *         description: List of students
  */
 router.get('/course/:courseId', protect, instructorOrAdmin, getCourseStudents);
+
+/**
+ * @swagger
+ * /api/enrollments/admin-assign:
+ *   post:
+ *     summary: Admin assign course to user (Admin only)
+ *     tags: [Enrollment]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - userId
+ *               - courseId
+ *             properties:
+ *               userId:
+ *                 type: string
+ *                 description: User ID to assign course to
+ *               courseId:
+ *                 type: string
+ *                 description: Course ID to assign
+ *     responses:
+ *       201:
+ *         description: Course assigned successfully
+ *       400:
+ *         description: Already enrolled or missing IDs
+ *       403:
+ *         description: Not authorized (admin only)
+ *       404:
+ *         description: User or course not found
+ */
+router.post('/admin-assign', protect, adminOnly, adminAssignCourse);
 
 module.exports = router;
