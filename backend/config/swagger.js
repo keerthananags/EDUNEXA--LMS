@@ -36,8 +36,11 @@ const getSwaggerOptions = (baseUrl = "http://localhost:5000") => ({
 
 // function to setup swagger
 const setupSwagger = (app) => {
-  // Dynamic swagger spec based on request
-  app.use("/api-docs", (req, res, next) => {
+  // Serve swagger UI static files first
+  app.use("/api-docs", swaggerUi.serve);
+  
+  // Dynamic swagger spec setup
+  app.get("/api-docs", (req, res, next) => {
     const protocol = req.headers['x-forwarded-proto'] || req.protocol;
     const host = req.headers['x-forwarded-host'] || req.headers.host;
     const baseUrl = `${protocol}://${host}`;
@@ -46,7 +49,7 @@ const setupSwagger = (app) => {
     const swaggerSpec = swaggerJsdoc(options);
     
     swaggerUi.setup(swaggerSpec)(req, res, next);
-  }, swaggerUi.serve);
+  });
   
   // Also serve the spec as JSON with dynamic URL
   app.get("/api-docs/swagger.json", (req, res) => {
