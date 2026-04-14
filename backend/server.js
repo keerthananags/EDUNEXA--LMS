@@ -26,7 +26,11 @@ setupSwagger(app);
 
 // Basic Route
 app.get('/', (req, res) => {
-  res.send('EduNexa LMS API is running...');
+  res.json({ 
+    message: 'EduNexa LMS API is running...',
+    env: process.env.NODE_ENV,
+    timestamp: new Date().toISOString()
+  });
 });
 
 // API Routes
@@ -106,6 +110,8 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
+// Bind to 0.0.0.0 for Railway (required for external access)
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);
+  console.log(`Server bound to 0.0.0.0:${PORT}`);
 });
