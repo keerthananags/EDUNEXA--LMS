@@ -14,6 +14,10 @@ export default defineConfig({
     sourcemap: false,
     minify: 'esbuild',
     target: 'es2020',
+    cssMinify: true,
+  },
+  css: {
+    transformer: 'postcss',
   },
   server: {
     proxy: {
