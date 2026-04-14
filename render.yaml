@@ -12,6 +12,8 @@ services:
         value: production
       - key: BASE_URL
         value: https://edunexa-lms.onrender.com
+      - key: FRONTEND_URL
+        value: https://shiny-torte-b2d387.netlify.app
       - key: MONGODB_URI
         value: mongodb+srv://keerthanacode4_db_user:keerthanadb@cluster0.lpjlerk.mongodb.net/?appName=Cluster0
       - key: JWT_SECRET

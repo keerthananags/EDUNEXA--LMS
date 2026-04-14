@@ -23,8 +23,8 @@ app.use(cors({
       return callback(null, true);
     }
     
-    // Allow any Vercel domain in production
-    if (origin.includes('vercel.app') || origin.includes(process.env.VERCEL_URL)) {
+    // Allow any Vercel or Netlify domain in production
+    if (origin.includes('vercel.app') || origin.includes('netlify.app') || origin.includes(process.env.VERCEL_URL)) {
       return callback(null, true);
     }
     
