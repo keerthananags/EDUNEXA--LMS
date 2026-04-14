@@ -1,4 +1,13 @@
 {
+  "name": "edunexa-lms",
+  "version": "1.0.0",
+  "engines": {
+    "node": "22.x"
+  },
+  "scripts": {
+    "build": "cd backend && npm install && cd ../frontend && npm install && npm run build",
+    "start": "cd backend && npm start"
+  },
   "dependencies": {
     "@tailwindcss/vite": "^4.2.2",
     "lucide-react": "^1.8.0"

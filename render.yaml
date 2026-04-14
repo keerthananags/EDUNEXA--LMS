@@ -1,0 +1,18 @@
+services:
+  # Combined Backend + Frontend (Single Web Service)
+  - type: web
+    name: edunexa-lms
+    runtime: node
+    plan: free
+    buildCommand: cd backend && npm install && cd ../frontend && npm install && npm run build
+    startCommand: cd backend && npm start
+    staticPublishPath: frontend/dist
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        value: mongodb+srv://keerthanacode4_db_user:keerthanadb@cluster0.lpjlerk.mongodb.net/?appName=Cluster0
+      - key: JWT_SECRET
+        value: supersecretkey
+      - key: PORT
+        value: 10000
