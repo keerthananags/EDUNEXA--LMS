@@ -1,7 +1,7 @@
 const swaggerUi = require("swagger-ui-express");
 const swaggerJsdoc = require("swagger-jsdoc");
 
-const options = {
+const getSwaggerOptions = (baseUrl = "http://localhost:5000") => ({
   definition: {
     openapi: "3.0.0",
     info: {
@@ -11,7 +11,7 @@ const options = {
     },
     servers: [
       {
-        url: process.env.BASE_URL || "http://localhost:5000",
+        url: baseUrl,
         description: process.env.NODE_ENV === 'production' ? 'Production server' : 'Development server',
       },
     ],
@@ -32,16 +32,33 @@ const options = {
   },
   // Paths to files containing OpenAPI definitions
   apis: ["./routes/*.js", "./server.js"],
-};
-
-const swaggerSpec = swaggerJsdoc(options);
+});
 
 // function to setup swagger
 const setupSwagger = (app) => {
-  app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
-  // Also serve the spec as JSON
+  // Dynamic swagger spec based on request
+  app.use("/api-docs", (req, res, next) => {
+    const protocol = req.headers['x-forwarded-proto'] || req.protocol;
+    const host = req.headers['x-forwarded-host'] || req.headers.host;
+    const baseUrl = `${protocol}://${host}`;
+    
+    const options = getSwaggerOptions(baseUrl);
+    const swaggerSpec = swaggerJsdoc(options);
+    
+    swaggerUi.setup(swaggerSpec)(req, res, next);
+  }, swaggerUi.serve);
+  
+  // Also serve the spec as JSON with dynamic URL
   app.get("/api-docs/swagger.json", (req, res) => {
+    const protocol = req.headers['x-forwarded-proto'] || req.protocol;
+    const host = req.headers['x-forwarded-host'] || req.headers.host;
+    const baseUrl = `${protocol}://${host}`;
+    
+    const options = getSwaggerOptions(baseUrl);
+    const swaggerSpec = swaggerJsdoc(options);
+    
     res.setHeader("Content-Type", "application/json");
+    res.setHeader("Access-Control-Allow-Origin", "*");
     res.send(swaggerSpec);
   });
 };
