@@ -11,7 +11,9 @@ export default defineConfig({
   base: '/',
   build: {
     outDir: 'dist',
-    sourcemap: true,
+    sourcemap: false,
+    minify: 'esbuild',
+    target: 'es2020',
   },
   server: {
     proxy: {
@@ -20,5 +22,8 @@ export default defineConfig({
         changeOrigin: true,
       },
     },
+  },
+  define: {
+    'process.env.VITE_API_URL': JSON.stringify(process.env.VITE_API_URL),
   },
 })

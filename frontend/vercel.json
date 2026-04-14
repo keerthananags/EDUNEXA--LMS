@@ -1,6 +1,7 @@
 {
   "version": 2,
-  "buildCommand": "npm install --force && npm run build",
+  "installCommand": "npm install --force",
+  "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "framework": "vite",
   "rewrites": [
@@ -8,5 +9,9 @@
       "source": "/(.*)",
       "destination": "/index.html"
     }
-  ]
+  ],
+  "env": {
+    "NODE_ENV": "production",
+    "VITE_API_URL": "https://edunexa-lms.onrender.com/api"
+  }
 }
