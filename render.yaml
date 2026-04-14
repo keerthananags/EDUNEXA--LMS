@@ -10,6 +10,8 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
+      - key: BASE_URL
+        value: https://edunexa-lms.onrender.com
       - key: MONGODB_URI
         value: mongodb+srv://keerthanacode4_db_user:keerthanadb@cluster0.lpjlerk.mongodb.net/?appName=Cluster0
       - key: JWT_SECRET
