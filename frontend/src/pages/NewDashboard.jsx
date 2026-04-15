@@ -19,103 +19,203 @@ import {
   ArrowUpRight,
   Activity,
   Target,
-  Zap
+  Zap,
+  Loader2
 } from "lucide-react";
 import Sidebar from "../components/Sidebar";
 import TopNavBar from "../components/TopNavBar";
 
-// Mock data - replace with API calls
-const stats = [
-  { 
-    title: "Total Enrollments", 
-    value: "12,482", 
-    change: "+12%", 
-    icon: Users, 
-    color: "primary",
-    progress: 75 
-  },
-  { 
-    title: "Completion Rate", 
-    value: "78.4%", 
-    change: "+4%", 
-    icon: TrendingUp, 
-    color: "secondary",
-    chart: true
-  },
-  { 
-    title: "Monthly Revenue", 
-    value: "$42,910", 
-    change: "+8%", 
-    icon: DollarSign, 
-    color: "tertiary",
-    sparkline: true
-  },
-  { 
-    title: "Average Rating", 
-    value: "4.92", 
-    change: "", 
-    icon: Star, 
-    color: "secondary",
-    stars: true,
-    progress: 98
-  },
-];
-
-const courses = [
-  {
-    id: 1,
-    title: "Backend Architecture",
-    duration: "12h 40m",
-    progress: 45,
-    image: "https://images.unsplash.com/photo-1558494949-ef526b0042a0?w=400",
-  },
-  {
-    id: 2,
-    title: "Machine Learning",
-    duration: "8h 20m",
-    progress: 82,
-    image: "https://images.unsplash.com/photo-1555949963-aa79dcee981c?w=400",
-  },
-  {
-    id: 3,
-    title: "React Development",
-    duration: "6h 30m",
-    progress: 15,
-    image: "https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=400",
-  },
-  {
-    id: 4,
-    title: "Python for Beginners",
-    duration: "10h 15m",
-    progress: 60,
-    image: "https://images.unsplash.com/photo-1526379095098-d400fd0bf935?w=400",
-  },
-];
-
-const deadlines = [
-  { id: 1, title: "Design System Audit", course: "Advanced UI/UX", date: "Oct 24", urgent: true },
-  { id: 2, title: "Neural Net Visual", course: "Machine Learning", date: "Oct 27", urgent: false },
-];
-
-const activities = [
-  { id: 1, user: "Sarah Jenkins", action: "joined", target: "Advanced AI Ethics", time: "2 min ago", icon: Users, color: "primary" },
-  { id: 2, user: "David K.", action: "completed", target: "Quantum Physics 101", time: "14 min ago", icon: Award, color: "secondary" },
-  { id: 3, user: "New payment", action: "received from", target: "Marcus V.", time: "48 min ago", icon: DollarSign, color: "tertiary" },
-  { id: 4, user: "Elena Rossi", action: "registered", target: "new account", time: "1 hour ago", icon: Users, color: "primary" },
-];
-
-const recommended = [
-  { id: 1, title: "Digital Anthropology", category: "Humanities", lessons: 15, tag: "NEW", tagColor: "tertiary", image: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400" },
-  { id: 2, title: "Advanced Data Viz", category: "Science", lessons: 24, tag: "TOP RATED", tagColor: "secondary", image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400" },
-  { id: 3, title: "Spatial Computing", category: "Tech", lessons: 10, tag: "TRENDING", tagColor: "primary", image: "https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=400" },
-  { id: 4, title: "AI Ethics", category: "Technology", lessons: 12, tag: "POPULAR", tagColor: "tertiary", image: "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=400" },
-  { id: 5, title: "Web3 Development", category: "Blockchain", lessons: 18, tag: "HOT", tagColor: "secondary", image: "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=400" },
-  { id: 6, title: "Cloud Architecture", category: "DevOps", lessons: 20, tag: "NEW", tagColor: "primary", image: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=400" },
-];
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 export default function NewDashboard() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("week");
+  const [myCourses, setMyCourses] = useState([]);
+  const [allCourses, setAllCourses] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({
+    totalEnrollments: 0,
+    completedCourses: 0,
+    avgProgress: 0
+  });
+
+  // Fetch data on mount
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
+  const handleUnauthorized = () => {
+    alert('Session expired. Please login again.');
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    navigate('/login');
+  };
+
+  const fetchDashboardData = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        handleUnauthorized();
+        return;
+      }
+
+      // Fetch my enrolled courses
+      const myCoursesRes = await fetch(`${API_BASE_URL}/my-courses`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (myCoursesRes.status === 401) {
+        handleUnauthorized();
+        return;
+      }
+
+      let enrolledCourses = [];
+      if (myCoursesRes.ok) {
+        const enrollments = await myCoursesRes.json();
+        enrolledCourses = enrollments.map(enrollment => ({
+          id: enrollment.course?._id || enrollment._id,
+          title: enrollment.course?.title || 'Course',
+          duration: '8h 30m',
+          progress: enrollment.progress || 0,
+          image: enrollment.course?.thumbnail || `https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400`,
+          enrolled: true
+        }));
+        setMyCourses(enrolledCourses);
+        
+        // Calculate stats
+        const completed = enrolledCourses.filter(c => c.progress === 100).length;
+        const avgProgress = enrolledCourses.length > 0 
+          ? Math.round(enrolledCourses.reduce((acc, c) => acc + c.progress, 0) / enrolledCourses.length)
+          : 0;
+        
+        setStats({
+          totalEnrollments: enrolledCourses.length,
+          completedCourses: completed,
+          avgProgress: avgProgress
+        });
+      }
+
+      // Fetch all available courses
+      const allCoursesRes = await fetch(`${API_BASE_URL}/courses`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (allCoursesRes.status === 401) {
+        handleUnauthorized();
+        return;
+      }
+
+      if (allCoursesRes.ok) {
+        const courses = await allCoursesRes.json();
+        const enrolledIds = new Set(enrolledCourses.map(c => c.id?.toString()));
+        
+        const transformedCourses = courses.map(course => ({
+          id: course._id,
+          title: course.title,
+          category: course.category || 'Development',
+          lessons: course.lessons?.length || 12,
+          tag: course.price === 0 ? 'FREE' : course.price < 50 ? 'POPULAR' : 'PREMIUM',
+          tagColor: course.price === 0 ? 'primary' : course.price < 50 ? 'secondary' : 'tertiary',
+          image: course.thumbnail || `https://images.unsplash.com/photo-${[
+            '1516321318423-f06f85e504b3',
+            '1551288049-bebda4e38f71',
+            '1633356122544-f134324a6cee',
+            '1677442136019-21780ecad995'
+          ][Math.floor(Math.random() * 4)]}?w=400`,
+          enrolled: enrolledIds.has(course._id?.toString()),
+          price: course.price || 0,
+          level: course.level || 'beginner'
+        }));
+        
+        setAllCourses(transformedCourses);
+      }
+    } catch (error) {
+      console.error('Failed to fetch dashboard data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEnroll = async (courseId) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_BASE_URL}/enroll/${courseId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      if (response.status === 401) {
+        handleUnauthorized();
+        return;
+      }
+
+      const data = await response.json();
+      
+      if (response.ok) {
+        alert('Successfully enrolled!');
+        // Refresh data
+        fetchDashboardData();
+      } else {
+        alert(data.message || 'Failed to enroll');
+      }
+    } catch (error) {
+      console.error('Enrollment error:', error);
+      alert('Failed to enroll. Please try again.');
+    }
+  };
+
+  // Stats data
+  const statsData = [
+    { 
+      title: "My Courses", 
+      value: stats.totalEnrollments.toString(), 
+      change: "+0%", 
+      icon: BookOpen, 
+      color: "primary",
+      progress: stats.avgProgress 
+    },
+    { 
+      title: "Completion Rate", 
+      value: `${stats.avgProgress}%`, 
+      change: "+0%", 
+      icon: TrendingUp, 
+      color: "secondary",
+      chart: true
+    },
+    { 
+      title: "Completed", 
+      value: stats.completedCourses.toString(), 
+      change: "", 
+      icon: Award, 
+      color: "tertiary",
+      sparkline: true
+    },
+    { 
+      title: "Avg Progress", 
+      value: `${stats.avgProgress}%`, 
+      change: "", 
+      icon: Star, 
+      color: "secondary",
+      stars: true,
+      progress: stats.avgProgress
+    },
+  ];
+
+  const deadlines = [
+    { id: 1, title: "Complete Lesson", course: "Continue Learning", date: "Today", urgent: true },
+    { id: 2, title: "Practice Exercise", course: "Stay on Track", date: "Tomorrow", urgent: false },
+  ];
+
+  if (loading) {
+    return (
+      <div className="bg-[#060e20] text-[#dee5ff] min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-[#5764f1]" />
+      </div>
+    );
+  }
 
   return (
     <div className="bg-[#060e20] text-[#dee5ff] min-h-screen">
@@ -170,7 +270,7 @@ export default function NewDashboard() {
 
           {/* Stats Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-            {stats.map((stat, index) => (
+            {statsData.map((stat, index) => (
               <motion.div
                 key={stat.title}
                 initial={{ opacity: 0, y: 20 }}
@@ -367,11 +467,29 @@ export default function NewDashboard() {
             <div className="lg:col-span-2 space-y-6">
               <div className="flex justify-between items-end">
                 <h3 className="text-2xl font-bold tracking-tight">My Courses</h3>
-                <button className="text-[#7d88ff] text-sm hover:underline">View all schedule</button>
+                <button 
+                  onClick={() => navigate('/courses')}
+                  className="text-[#7d88ff] text-sm hover:underline"
+                >
+                  View all courses
+                </button>
               </div>
               
+              {myCourses.length === 0 ? (
+                <div className="bg-[#091328] rounded-xl p-8 text-center">
+                  <BookOpen className="w-12 h-12 text-slate-500 mx-auto mb-4" />
+                  <h4 className="text-lg font-bold mb-2">No courses yet</h4>
+                  <p className="text-slate-400 mb-4">Enroll in a course to start learning!</p>
+                  <button 
+                    onClick={() => navigate('/courses')}
+                    className="px-6 py-2 bg-gradient-to-r from-[#5764f1] to-[#c081ff] text-white rounded-full font-bold"
+                  >
+                    Browse Courses
+                  </button>
+                </div>
+              ) : (
               <div className="grid grid-cols-2 gap-6">
-                {courses.map((course) => (
+                {myCourses.map((course) => (
                   <div 
                     key={course.id}
                     className="bg-[#091328] rounded-xl p-5 hover:bg-[#0f1930] transition-all group border border-white/5 cursor-pointer"
@@ -404,6 +522,7 @@ export default function NewDashboard() {
                   </div>
                 ))}
               </div>
+              )}
 
               {/* Learning Hours Chart */}
               <div className="bg-[#091328] rounded-2xl p-6 border border-white/5">
@@ -437,11 +556,19 @@ export default function NewDashboard() {
                 </div>
               </div>
 
-              {/* Recommended */}
+              {/* Available Courses */}
               <div>
-                <h3 className="text-2xl font-bold mb-6 tracking-tight">Recommended for You</h3>
+                <div className="flex justify-between items-center mb-6">
+                  <h3 className="text-2xl font-bold tracking-tight">Available Courses</h3>
+                  <button 
+                    onClick={() => navigate('/courses')}
+                    className="px-4 py-2 bg-[#192540] hover:bg-[#5764f1] text-white rounded-lg text-sm font-bold transition"
+                  >
+                    View All
+                  </button>
+                </div>
                 <div className="grid grid-cols-3 gap-6">
-                  {recommended.map((item) => (
+                  {allCourses.filter(c => !c.enrolled).slice(0, 6).map((item) => (
                     <div 
                       key={item.id} 
                       className="group cursor-pointer"
@@ -464,9 +591,17 @@ export default function NewDashboard() {
                           <h5 className="text-sm font-bold text-white leading-tight">{item.title}</h5>
                         </div>
                       </div>
-                      <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">
-                        {item.category} • {item.lessons} Lessons
-                      </p>
+                      <div className="flex justify-between items-center">
+                        <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">
+                          {item.category} • {item.lessons} Lessons
+                        </p>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleEnroll(item.id); }}
+                          className="px-3 py-1 bg-[#5764f1] hover:bg-[#7d88ff] text-white text-[10px] font-bold rounded-full transition"
+                        >
+                          Enroll
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>

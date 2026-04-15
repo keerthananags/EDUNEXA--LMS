@@ -54,6 +54,15 @@ export default function Courses() {
       
       console.log('Courses response status:', response.status);
       
+      // Handle 401 - redirect to login
+      if (response.status === 401) {
+        alert('Session expired. Please login again.');
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        navigate('/login');
+        return;
+      }
+      
       if (response.ok) {
         const data = await response.json();
         console.log('Courses data received:', data.length, 'courses');
@@ -178,6 +187,15 @@ export default function Courses() {
       
       const data = await response.json();
       console.log('Enrollment response:', response.status, data);
+      
+      // Handle 401 - redirect to login
+      if (response.status === 401) {
+        alert('Session expired. Please login again.');
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        navigate('/login');
+        return;
+      }
       
       if (response.ok) {
         // Update local state to show enrolled

@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Shield, Lock, Eye, EyeOff } from 'lucide-react';
+import { Shield, Lock, Eye, EyeOff, User, Mail, ArrowRight } from 'lucide-react';
 
-export default function AdminLogin() {
+export default function AdminRegister() {
   const [formData, setFormData] = useState({
+    name: '',
     email: '',
     password: '',
   });
@@ -28,8 +29,8 @@ export default function AdminLogin() {
     setError('');
 
     try {
-      // Use admin login endpoint
-      const response = await fetch('http://localhost:5000/api/auth/admin/login', {
+      // Use admin register endpoint
+      const response = await fetch('http://localhost:5000/api/auth/admin/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -40,11 +41,13 @@ export default function AdminLogin() {
       const data = await response.json();
 
       if (response.ok) {
-        // Store token and user data via auth context
-        login(data, data.token);
+        // Store token and user data
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('user', JSON.stringify(data));
+        login(data);
         navigate('/admin');
       } else {
-        setError(data.message || 'Admin login failed');
+        setError(data.message || 'Admin registration failed');
       }
     } catch (err) {
       setError('Failed to connect to server');
@@ -65,9 +68,9 @@ export default function AdminLogin() {
           <p className="text-gray-400">EduNexa LMS Administration</p>
         </div>
 
-        {/* Login Card */}
+        {/* Register Card */}
         <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20">
-          <h2 className="text-2xl font-bold text-white mb-6">Admin Login</h2>
+          <h2 className="text-2xl font-bold text-white mb-6">Create Admin Account</h2>
 
           {error && (
             <div className="bg-red-500/20 border border-red-500/50 text-red-200 px-4 py-3 rounded-lg mb-6">
@@ -78,9 +81,28 @@ export default function AdminLogin() {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
+                Full Name
+              </label>
+              <div className="relative">
+                <User className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input
+                  type="text"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  required
+                  placeholder="Enter your name"
+                  className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
                 Admin Email
               </label>
               <div className="relative">
+                <Mail className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                 <input
                   type="email"
                   name="email"
@@ -88,7 +110,7 @@ export default function AdminLogin() {
                   onChange={handleChange}
                   required
                   placeholder="admin@edunexa.com"
-                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                  className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
                 />
               </div>
             </div>
@@ -98,14 +120,16 @@ export default function AdminLogin() {
                 Password
               </label>
               <div className="relative">
+                <Lock className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
                   required
+                  minLength={6}
                   placeholder="••••••••"
-                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none pr-12"
+                  className="w-full pl-10 pr-12 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
                 />
                 <button
                   type="button"
@@ -125,12 +149,12 @@ export default function AdminLogin() {
               {loading ? (
                 <>
                   <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Signing in...
+                  Creating account...
                 </>
               ) : (
                 <>
-                  <Lock className="w-5 h-5" />
-                  Sign In
+                  <ArrowRight className="w-5 h-5" />
+                  Create Admin Account
                 </>
               )}
             </button>
@@ -138,21 +162,21 @@ export default function AdminLogin() {
 
           <div className="mt-6 text-center space-y-2">
             <p className="text-gray-400 text-sm">
-              Not an admin?{' '}
-              <button
-                onClick={() => navigate('/login')}
+              Already have an admin account?{' '}
+              <Link
+                to="/admin/login"
                 className="text-blue-400 hover:text-blue-300 font-medium"
               >
-                Go to Student Login
-              </button>
+                Sign In
+              </Link>
             </p>
             <p className="text-gray-500 text-sm">
-              <Link
-                to="/admin/register"
-                className="text-blue-400 hover:text-blue-300 font-medium"
+              <button
+                onClick={() => navigate('/register')}
+                className="text-gray-400 hover:text-gray-300"
               >
-                Create Admin Account
-              </Link>
+                Go to Student Registration
+              </button>
             </p>
           </div>
         </div>

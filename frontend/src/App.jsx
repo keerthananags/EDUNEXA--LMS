@@ -5,6 +5,7 @@ import NewDashboard from "./pages/NewDashboard";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import AdminLogin from "./pages/AdminLogin";
+import AdminRegister from "./pages/AdminRegister";
 import AdminDashboard from "./pages/Admin";
 import Courses from "./pages/Courses";
 import CourseDetails from "./pages/CourseDetails";
@@ -46,6 +47,7 @@ export default function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/admin/login" element={<AdminLogin />} />
+          <Route path="/admin/register" element={<AdminRegister />} />
           
           {/* Protected user routes */}
           <Route path="/dashboard" element={<ProtectedRoute><NewDashboard /></ProtectedRoute>} />

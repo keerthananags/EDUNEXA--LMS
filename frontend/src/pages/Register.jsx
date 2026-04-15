@@ -127,6 +127,12 @@ const Register = () => {
             Sign In
           </Link>
         </p>
+
+        <p className="text-center mt-4 text-gray-400 text-sm">
+          <Link to="/admin/login" className="text-gray-500 hover:text-gray-700">
+            Admin Login →
+          </Link>
+        </p>
       </div>
     </div>
   );

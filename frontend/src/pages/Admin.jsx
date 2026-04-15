@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { 
   BookOpen, 
@@ -28,6 +28,7 @@ import {
 
 const Admin = () => {
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('dashboard');
   const [users, setUsers] = useState([]);
   const [courses, setCourses] = useState([]);
@@ -45,26 +46,50 @@ const Admin = () => {
     fetchAdminData();
   }, []);
 
+  const handleUnauthorized = () => {
+    alert('Session expired. Please login again.');
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    navigate('/admin/login');
+  };
+
   const fetchAdminData = async () => {
     try {
       const token = localStorage.getItem('token');
+      
+      if (!token) {
+        handleUnauthorized();
+        return;
+      }
       
       // Fetch stats
       const statsRes = await fetch('http://localhost:5000/api/admin/stats', {
         headers: { Authorization: `Bearer ${token}` }
       });
+      if (statsRes.status === 401) {
+        handleUnauthorized();
+        return;
+      }
       if (statsRes.ok) setStats(await statsRes.json());
 
       // Fetch users
       const usersRes = await fetch('http://localhost:5000/api/admin/users', {
         headers: { Authorization: `Bearer ${token}` }
       });
+      if (usersRes.status === 401) {
+        handleUnauthorized();
+        return;
+      }
       if (usersRes.ok) setUsers(await usersRes.json());
 
       // Fetch courses
       const coursesRes = await fetch('http://localhost:5000/api/admin/courses', {
         headers: { Authorization: `Bearer ${token}` }
       });
+      if (coursesRes.status === 401) {
+        handleUnauthorized();
+        return;
+      }
       if (coursesRes.ok) setCourses(await coursesRes.json());
     } catch (error) {
       console.error('Failed to fetch admin data:', error);
@@ -86,6 +111,11 @@ const Admin = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       
+      if (res.status === 401) {
+        handleUnauthorized();
+        return;
+      }
+      
       if (res.ok) {
         setUsers(users.filter(u => u._id !== userId));
       }
@@ -105,6 +135,11 @@ const Admin = () => {
         },
         body: JSON.stringify({ role: newRole })
       });
+      
+      if (res.status === 401) {
+        handleUnauthorized();
+        return;
+      }
       
       if (res.ok) {
         setUsers(users.map(u => u._id === userId ? { ...u, role: newRole } : u));
@@ -126,6 +161,11 @@ const Admin = () => {
         },
         body: JSON.stringify(newUser)
       });
+      
+      if (res.status === 401) {
+        handleUnauthorized();
+        return;
+      }
       
       if (res.ok) {
         const data = await res.json();
@@ -150,6 +190,11 @@ const Admin = () => {
         },
         body: JSON.stringify(newCourse)
       });
+      
+      if (res.status === 401) {
+        handleUnauthorized();
+        return;
+      }
       
       if (res.ok) {
         const data = await res.json();
@@ -185,6 +230,11 @@ const Admin = () => {
         body: JSON.stringify(assignCourse)
       });
       
+      if (res.status === 401) {
+        handleUnauthorized();
+        return;
+      }
+      
       if (res.ok) {
         const data = await res.json();
         setShowAssignCourseModal(false);
@@ -213,6 +263,11 @@ const Admin = () => {
         },
         body: JSON.stringify({ isPublished: !currentStatus })
       });
+      
+      if (res.status === 401) {
+        handleUnauthorized();
+        return;
+      }
       
       if (res.ok) {
         const updatedCourse = await res.json();
