@@ -13,6 +13,7 @@ import Analytics from "./pages/Analytics";
 import Settings from "./pages/Settings";
 import Profile from "./pages/Profile";
 import Calendar from "./pages/Calendar";
+
 import Resources from "./pages/Resources";
 
 function ProtectedRoute({ children, adminOnly = false }) {
