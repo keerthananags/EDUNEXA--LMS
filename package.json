@@ -2,7 +2,11 @@
   "name": "edunexa-lms",
   "version": "1.0.0",
   "engines": {
+<<<<<<< HEAD
     "node": ">=24"
+=======
+    "node": "24.x"
+>>>>>>> fef48bb (Fixed admin authentication, resolved 401 errors, added role-based access control)
   },
   "scripts": {
     "build": "cd backend && npm install && cd ../frontend && npm install && npm run build",
