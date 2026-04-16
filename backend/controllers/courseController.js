@@ -8,9 +8,11 @@ const getCourses = async (req, res) => {
   try {
     const courses = await Course.find({ isPublished: true })
       .populate('instructor', 'name email')
-      .populate('lessons', 'title duration order');
+      .populate('lessons', 'title duration order')
+      .lean();
     res.json(courses);
   } catch (error) {
+    console.error('getCourses error:', error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -22,7 +24,8 @@ const getCourseById = async (req, res) => {
   try {
     const course = await Course.findById(req.params.id)
       .populate('instructor', 'name email')
-      .populate('lessons');
+      .populate('lessons')
+      .lean();
 
     if (course) {
       res.json(course);
@@ -30,6 +33,7 @@ const getCourseById = async (req, res) => {
       res.status(404).json({ message: 'Course not found' });
     }
   } catch (error) {
+    console.error('getCourseById error:', error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -118,9 +122,11 @@ const deleteCourse = async (req, res) => {
 const getMyCourses = async (req, res) => {
   try {
     const courses = await Course.find({ instructor: req.user._id })
-      .populate('lessons', 'title duration order');
+      .populate('lessons', 'title duration order')
+      .lean();
     res.json(courses);
   } catch (error) {
+    console.error('getMyCourses error:', error);
     res.status(500).json({ message: error.message });
   }
 };

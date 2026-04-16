@@ -47,9 +47,13 @@ const enrollCourse = async (req, res) => {
     course.enrolledStudents.push(req.user._id);
     await course.save();
 
+    // Safely populate course data
+    const populatedEnrollment = await Enrollment.findById(enrollment._id)
+      .populate('course', 'title description thumbnail');
+    
     res.status(201).json({
       message: 'Enrolled successfully',
-      enrollment: await enrollment.populate('course', 'title description thumbnail'),
+      enrollment: populatedEnrollment || enrollment,
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -61,11 +65,36 @@ const enrollCourse = async (req, res) => {
 // @access  Private
 const getMyEnrollments = async (req, res) => {
   try {
+    // Get enrollments with basic course populate
     const enrollments = await Enrollment.find({ student: req.user._id })
-      .populate('course', 'title description thumbnail instructor')
-      .populate('completedLessons.lesson', 'title');
-    res.json(enrollments);
+      .populate({
+        path: 'course',
+        select: 'title description thumbnail instructor category level',
+        populate: {
+          path: 'instructor',
+          select: 'name email',
+          options: { strictPopulate: false }
+        }
+      })
+      .lean();
+    
+    // Clean up data - remove problematic fields that might cause frontend issues
+    const cleanEnrollments = enrollments.map(e => ({
+      ...e,
+      course: e.course ? {
+        _id: e.course._id,
+        title: e.course.title || 'Untitled Course',
+        description: e.course.description || '',
+        thumbnail: e.course.thumbnail || '',
+        category: e.course.category || 'Development',
+        level: e.course.level || 'beginner',
+        instructor: e.course.instructor || { name: 'Unknown Instructor', email: '' }
+      } : null
+    })).filter(e => e.course !== null); // Remove enrollments with deleted courses
+    
+    res.json(cleanEnrollments);
   } catch (error) {
+    console.error('getMyEnrollments error:', error);
     res.status(500).json({ message: error.message });
   }
 };
