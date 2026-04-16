@@ -1,22 +1,17 @@
 {
   "name": "edunexa-lms",
   "version": "1.0.0",
+  "private": true,
   "engines": {
-    "node": "24.x"
-},
-  "scripts": {
-    "build": "cd backend && npm install && cd ../frontend && npm install && npm run build",
-    "start": "cd backend && npm start"
+    "node": "20.x"
   },
-  "dependencies": {
-    "@tailwindcss/vite": "^4.2.2",
-    "lightningcss": "^1.32.0",
-    "lucide-react": "^1.8.0"
+  "scripts": {
+    "install-all": "npm install --prefix backend && npm install --prefix frontend",
+    "dev": "concurrently \"npm run dev --prefix backend\" \"npm run dev --prefix frontend\"",
+    "build": "npm run build --prefix frontend",
+    "start": "npm start --prefix backend"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4.2.2"
-  },
-  "scripts": {
-  "build": "vite build --force"
-}
+    "concurrently": "^8.2.2"
+  }
 }
