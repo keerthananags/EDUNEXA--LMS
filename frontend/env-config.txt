@@ -1,0 +1,15 @@
+# Frontend Environment Configuration
+# Create a file named ".env" in this folder with the following content:
+
+# For local development:
+VITE_API_URL=http://localhost:5000/api
+
+# For production (Render deployment):
+VITE_API_URL=https://edunexa-lms-zx8q.onrender.com/api
+
+# Instructions:
+# 1. Create a file named ".env" in the frontend folder
+# 2. Copy the appropriate VITE_API_URL line above
+# 3. Save the file
+# 4. Restart the frontend dev server
+# 5. The frontend will now connect to your Render backend
