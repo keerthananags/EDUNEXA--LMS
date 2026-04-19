@@ -3,6 +3,10 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Mail, Lock, Eye, EyeOff, BookOpen, User, ArrowRight } from 'lucide-react';
 
+// Production backend URL
+const PROD_API_URL = 'https://edunexa-lms-zx8q.onrender.com/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || PROD_API_URL;
+
 const Register = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -19,15 +23,8 @@ const Register = () => {
     setError('');
 
     try {
-     // ✅ Add at top (if not already added)
-const API_BASE_URL = import.meta.env.VITE_API_URL;
-
-if (!API_BASE_URL) {
-  throw new Error("VITE_API_URL not set");
-}
-
-// 🔹 Register user
-const response = await fetch(`${API_BASE_URL}/auth/register`, {
+      // 🔹 Register user
+      const response = await fetch(`${API_BASE_URL}/auth/register`, {
   method: "POST",
   headers: {
     "Content-Type": "application/json",

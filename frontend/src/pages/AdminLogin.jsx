@@ -3,6 +3,10 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Shield, Lock, Eye, EyeOff } from 'lucide-react';
 
+// Production backend URL
+const PROD_API_URL = 'https://edunexa-lms-zx8q.onrender.com/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || PROD_API_URL;
+
 export default function AdminLogin() {
   const [formData, setFormData] = useState({
     email: '',
@@ -29,51 +33,26 @@ export default function AdminLogin() {
 
     try {
       // Use admin login endpoint
-     // ✅ Base URL (add at top of file)
-const API_BASE_URL = import.meta.env.VITE_API_URL;
-
-if (!API_BASE_URL) {
-  throw new Error("VITE_API_URL not set");
-}
-
-try {
-  // 🔹 Admin Login API
-  const response = await fetch(`${API_BASE_URL}/auth/admin/login`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(formData),
-  });
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.message || "Admin login failed");
-  }
-
-  // Save token (example)
-  localStorage.setItem("token", data.token);
-
-  // Redirect or update state
-  navigate("/admin");
-
-} catch (error) {
-  console.error("❌ Admin login error:", error);
-  setError(error.message);
-}
+      const response = await fetch(`${API_BASE_URL}/auth/admin/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
 
       const data = await response.json();
 
-      if (response.ok) {
-        // Store token and user data via auth context
-        login(data, data.token);
-        navigate('/admin');
-      } else {
-        setError(data.message || 'Admin login failed');
+      if (!response.ok) {
+        throw new Error(data.message || "Admin login failed");
       }
+
+      // Store token and user data via auth context
+      login(data, data.token);
+      navigate('/admin');
+
     } catch (err) {
-      setError('Failed to connect to server');
+      setError(err.message || 'Failed to connect to server');
     } finally {
       setLoading(false);
     }

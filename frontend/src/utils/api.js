@@ -1,4 +1,8 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL;
+// Production backend URL (Render)
+const PROD_API_URL = 'https://edunexa-lms-zx8q.onrender.com/api';
+
+// Use env var in development, production URL in production
+const API_BASE_URL = import.meta.env.VITE_API_URL || PROD_API_URL;
 
 // ❗ Safety check
 if (!API_BASE_URL) {

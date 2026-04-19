@@ -26,7 +26,9 @@ import {
   UserPlus
 } from 'lucide-react';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+// Production backend URL
+const PROD_API_URL = 'https://edunexa-lms-zx8q.onrender.com/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || PROD_API_URL;
 
 const Admin = () => {
   const { user, logout } = useAuth();
@@ -392,6 +394,13 @@ const Admin = () => {
                   <p className="text-xs text-slate-400">Administrator</p>
                 </div>
               </div>
+              <button
+                onClick={handleLogout}
+                className="p-3 bg-[#091328] rounded-xl border border-white/5 hover:bg-red-500/20 hover:border-red-500/30 transition text-slate-400 hover:text-red-400"
+                title="Logout"
+              >
+                <LogOut className="w-5 h-5" />
+              </button>
             </div>
           </div>
 

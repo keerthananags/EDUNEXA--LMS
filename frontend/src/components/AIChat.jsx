@@ -42,17 +42,8 @@ export default function AIChat({ courseTitle, courseContent }) {
       }
 
       // Test if backend is reachable first
-      const API_BASE_URL = import.meta.env.VITE_API_URL;
-
-      // Safety check
-      if (!API_BASE_URL) {
-        setMessages(prev => [...prev, { 
-          role: 'assistant', 
-          content: 'API URL not configured. Please check your environment settings.' 
-        }]);
-        setIsLoading(false);
-        return;
-      }
+      const PROD_API_URL = 'https://edunexa-lms-zx8q.onrender.com/api';
+      const API_BASE_URL = import.meta.env.VITE_API_URL || PROD_API_URL;
 
       try {
         const healthCheck = await fetch(`${API_BASE_URL.replace('/api', '')}/`, { 

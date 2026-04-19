@@ -28,13 +28,9 @@ import Sidebar from "../components/Sidebar";
 import AIChat from "../components/AIChat";
 import { enrollmentAPI } from '../utils/api';
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_URL ||
-  (import.meta.env.DEV ? "http://localhost:5000/api" : null);
-
-if (!API_BASE_URL) {
-  throw new Error("API URL not configured");
-}
+// Production backend URL
+const PROD_API_URL = 'https://edunexa-lms-zx8q.onrender.com/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || PROD_API_URL;
 const courseDataFallback = {
   1: {
     id: 1,

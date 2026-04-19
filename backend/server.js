@@ -12,12 +12,14 @@ const app = express();
 // ✅ CORS (works for Vercel + any frontend)
 app.use(
   cors({
-    origin: true,
+    origin: [
+      "http://localhost:5173",
+      "http://localhost:3000",
+      "https://lms-peyj91x4d-keerthananagesh32-8080s-projects.vercel.app"
+    ],
     credentials: true,
   })
 );
-
-app.use(express.json());
 
 // Swagger
 setupSwagger(app);

@@ -19,6 +19,10 @@ import {
   Loader2
 } from 'lucide-react';
 
+// Production backend URL
+const PROD_API_URL = 'https://edunexa-lms-zx8q.onrender.com/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || PROD_API_URL;
+
 export default function Courses() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('my-courses');
@@ -54,14 +58,7 @@ export default function Courses() {
         headers['Authorization'] = `Bearer ${token}`;
       }
       
-     // ✅ Add at top of file
-const API_BASE_URL = import.meta.env.VITE_API_URL;
-
-if (!API_BASE_URL) {
-  throw new Error("VITE_API_URL not set");
-}
-
-// 🔹 Fetch courses
+      // 🔹 Fetch courses
 const response = await fetch(`${API_BASE_URL}/courses`, {
   method: "GET",
   headers,
@@ -121,14 +118,7 @@ const response = await fetch(`${API_BASE_URL}/courses`, {
       const token = localStorage.getItem('token');
       console.log('Fetching my enrollments...');
       
-     // ✅ Add at top (if not already added)
-const API_BASE_URL = import.meta.env.VITE_API_URL;
-
-if (!API_BASE_URL) {
-  throw new Error("VITE_API_URL not set");
-}
-
-// 🔹 Fetch my courses
+      // 🔹 Fetch my courses
 const response = await fetch(`${API_BASE_URL}/my-courses`, {
   method: "GET",
   headers: {
@@ -192,14 +182,7 @@ const response = await fetch(`${API_BASE_URL}/my-courses`, {
       console.log('Enrolling in course:', courseId);
       console.log('Token present:', token ? 'Yes' : 'No');
       
-      // ✅ Add at top (if not already present)
-const API_BASE_URL = import.meta.env.VITE_API_URL;
-
-if (!API_BASE_URL) {
-  throw new Error("VITE_API_URL not set");
-}
-
-// 🔹 Enroll in course
+      // 🔹 Enroll in course
 const response = await fetch(`${API_BASE_URL}/enroll/${courseId}`, {
   method: "POST",
   headers: {

@@ -3,7 +3,9 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Mail, Lock, Eye, EyeOff, BookOpen, ArrowRight } from 'lucide-react';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL;
+// Production backend URL
+const PROD_API_URL = 'https://edunexa-lms-zx8q.onrender.com/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || PROD_API_URL;
 
 const Login = () => {
   const [email, setEmail] = useState('');
