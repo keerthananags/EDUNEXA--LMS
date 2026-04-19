@@ -7,6 +7,8 @@ const {
   updateCourse,
   deleteCourse,
   getMyCourses,
+  createCourseReview,
+  getCourseReviews,
 } = require('../controllers/courseController');
 const { protect, adminOnly, instructorOrAdmin } = require('../middleware/auth');
 
@@ -32,6 +34,10 @@ const { protect, adminOnly, instructorOrAdmin } = require('../middleware/auth');
  *               type: array
  */
 router.get('/', getCourses);
+
+// Review routes - MUST be before /:id route to avoid being caught as ID
+router.get('/:id/reviews', getCourseReviews);
+router.post('/:id/reviews', protect, createCourseReview);
 
 /**
  * @swagger

@@ -131,6 +131,82 @@ const getMyCourses = async (req, res) => {
   }
 };
 
+// @desc    Create course review
+// @route   POST /api/courses/:id/reviews
+// @access  Private
+const createCourseReview = async (req, res) => {
+  try {
+    const { rating, comment } = req.body;
+    const course = await Course.findById(req.params.id);
+
+    if (!course) {
+      return res.status(404).json({ message: 'Course not found' });
+    }
+
+    // Check if user already reviewed
+    const alreadyReviewed = course.reviews.find(
+      (r) => r.user.toString() === req.user._id.toString()
+    );
+
+    if (alreadyReviewed) {
+      return res.status(400).json({ message: 'Course already reviewed' });
+    }
+
+    const review = {
+      user: req.user._id,
+      name: req.user.name,
+      rating: Number(rating),
+      comment,
+    };
+
+    course.reviews.push(review);
+    course.numReviews = course.reviews.length;
+    course.totalRatings = course.reviews.reduce((acc, item) => item.rating + acc, 0);
+    course.rating = course.totalRatings / course.reviews.length;
+
+    await course.save();
+    res.status(201).json({ message: 'Review added' });
+  } catch (error) {
+    console.error('createCourseReview error:', error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Get course reviews
+// @route   GET /api/courses/:id/reviews
+// @access  Public
+const getCourseReviews = async (req, res) => {
+  try {
+    const course = await Course.findById(req.params.id).select('reviews rating numReviews');
+    
+    if (!course) {
+      return res.status(404).json({ message: 'Course not found' });
+    }
+
+    // Calculate rating distribution
+    const distribution = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+    course.reviews.forEach(review => {
+      distribution[review.rating] = (distribution[review.rating] || 0) + 1;
+    });
+
+    const total = course.reviews.length;
+    const percentages = {};
+    for (let i = 1; i <= 5; i++) {
+      percentages[i] = total > 0 ? Math.round((distribution[i] / total) * 100) : 0;
+    }
+
+    res.json({
+      reviews: course.reviews,
+      rating: course.rating,
+      numReviews: course.numReviews,
+      distribution: percentages
+    });
+  } catch (error) {
+    console.error('getCourseReviews error:', error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   getCourses,
   getCourseById,
@@ -138,4 +214,6 @@ module.exports = {
   updateCourse,
   deleteCourse,
   getMyCourses,
+  createCourseReview,
+  getCourseReviews,
 };

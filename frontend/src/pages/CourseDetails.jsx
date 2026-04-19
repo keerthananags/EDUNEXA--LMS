@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
   Play, 
@@ -20,11 +20,17 @@ import {
   Download,
   FileText,
   Video,
-  HelpCircle
+  HelpCircle,
+  Loader2,
+  ThumbsUp
 } from 'lucide-react';
 import Sidebar from "../components/Sidebar";
+import AIChat from "../components/AIChat";
+import { enrollmentAPI } from '../utils/api';
 
-const courseData = {
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
+const courseDataFallback = {
   1: {
     id: 1,
     title: "Backend Architecture",
@@ -174,8 +180,148 @@ export default function CourseDetails() {
   const [expandedSection, setExpandedSection] = useState(0);
   const [activeTab, setActiveTab] = useState('overview');
   const [isSaved, setIsSaved] = useState(false);
+  const [course, setCourse] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [reviewsData, setReviewsData] = useState({ reviews: [], rating: 0, numReviews: 0, distribution: {} });
+  const [reviewsLoading, setReviewsLoading] = useState(false);
+  const [enrolling, setEnrolling] = useState(false);
+  const [enrollSuccess, setEnrollSuccess] = useState(false);
+  const [showReviewForm, setShowReviewForm] = useState(false);
+  const [reviewForm, setReviewForm] = useState({ rating: 5, comment: '' });
+  const [submittingReview, setSubmittingReview] = useState(false);
   
-  const course = courseData[id] || courseData[1];
+  useEffect(() => {
+    fetchCourseDetails();
+    fetchReviews();
+  }, [id]);
+
+  const fetchCourseDetails = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_BASE_URL}/courses/${id}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      });
+      
+      if (!response.ok) {
+        if (response.status === 404) {
+          setError('Course not found');
+        } else {
+          setError('Failed to load course details');
+        }
+        return;
+      }
+      
+      const data = await response.json();
+      setCourse(data);
+    } catch (err) {
+      setError('Error connecting to server');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchReviews = async () => {
+    try {
+      setReviewsLoading(true);
+      const response = await fetch(`${API_BASE_URL}/courses/${id}/reviews`);
+      if (response.ok) {
+        const data = await response.json();
+        setReviewsData(data);
+      }
+    } catch (err) {
+      console.error('Failed to fetch reviews:', err);
+    } finally {
+      setReviewsLoading(false);
+    }
+  };
+
+  const handleEnroll = async () => {
+    try {
+      setEnrolling(true);
+      const token = localStorage.getItem('token');
+      if (!token) {
+        navigate('/login');
+        return;
+      }
+      await enrollmentAPI.enroll(id);
+      setEnrollSuccess(true);
+      setTimeout(() => {
+        navigate('/dashboard');
+      }, 1500);
+    } catch (err) {
+      alert(err.message || 'Failed to enroll. Please try again.');
+    } finally {
+      setEnrolling(false);
+    }
+  };
+
+  const handleSubmitReview = async (e) => {
+    e.preventDefault();
+    if (!reviewForm.comment.trim()) {
+      alert('Please enter a review comment');
+      return;
+    }
+
+    try {
+      setSubmittingReview(true);
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_BASE_URL}/courses/${id}/reviews`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(reviewForm)
+      });
+
+      if (response.ok) {
+        setShowReviewForm(false);
+        setReviewForm({ rating: 5, comment: '' });
+        fetchReviews();
+        fetchCourseDetails();
+      } else {
+        const data = await response.json();
+        alert(data.message || 'Failed to submit review');
+      }
+    } catch (err) {
+      alert('Error submitting review');
+    } finally {
+      setSubmittingReview(false);
+    }
+  };
+  
+  if (loading) {
+    return (
+      <div className="bg-[#060e20] text-[#dee5ff] min-h-screen flex items-center justify-center">
+        <Sidebar />
+        <main className="ml-64 flex-1 flex items-center justify-center">
+          <Loader2 className="w-10 h-10 animate-spin text-[#5764f1]" />
+        </main>
+      </div>
+    );
+  }
+  
+  if (error || !course) {
+    return (
+      <div className="bg-[#060e20] text-[#dee5ff] min-h-screen">
+        <Sidebar />
+        <main className="ml-64 min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <p className="text-xl text-slate-400 mb-4">{error || 'Course not found'}</p>
+            <button 
+              onClick={() => navigate('/courses')}
+              className="flex items-center gap-2 text-[#5764f1] hover:underline"
+            >
+              <ArrowLeft className="w-5 h-5" />
+              Back to Courses
+            </button>
+          </div>
+        </main>
+      </div>
+    );
+  }
   
   const toggleSection = (index) => {
     setExpandedSection(expandedSection === index ? -1 : index);
@@ -376,13 +522,13 @@ export default function CourseDetails() {
                   <div className="bg-[#091328] rounded-2xl p-6 border border-white/5">
                     <div className="flex items-center gap-8 mb-6">
                       <div className="text-center">
-                        <p className="text-5xl font-bold text-yellow-400">{course.rating}</p>
+                        <p className="text-5xl font-bold text-yellow-400">{(reviewsData.rating || 0).toFixed(1)}</p>
                         <div className="flex justify-center my-2">
                           {[...Array(5)].map((_, i) => (
-                            <Star key={i} className={`w-4 h-4 ${i < Math.floor(course.rating) ? 'text-yellow-400 fill-current' : 'text-slate-600'}`} />
+                            <Star key={i} className={`w-4 h-4 ${i < Math.floor(reviewsData.rating || 0) ? 'text-yellow-400 fill-current' : 'text-slate-600'}`} />
                           ))}
                         </div>
-                        <p className="text-sm text-slate-400">Course Rating</p>
+                        <p className="text-sm text-slate-400">{reviewsData.numReviews || 0} Reviews</p>
                       </div>
                       <div className="flex-1 space-y-2">
                         {[5, 4, 3, 2, 1].map((stars) => (
@@ -390,37 +536,104 @@ export default function CourseDetails() {
                             <span className="text-sm text-slate-400 w-8">{stars} star</span>
                             <div className="flex-1 h-2 bg-[#192540] rounded-full overflow-hidden">
                               <div 
-                                className="h-full bg-yellow-400 rounded-full"
-                                style={{ width: `${stars === 5 ? 70 : stars === 4 ? 20 : stars === 3 ? 7 : stars === 2 ? 2 : 1}%` }}
+                                className="h-full bg-yellow-400 rounded-full transition-all duration-500"
+                                style={{ width: `${reviewsData.distribution?.[stars] || 0}%` }}
                               />
                             </div>
                             <span className="text-sm text-slate-400 w-12 text-right">
-                              {stars === 5 ? '70%' : stars === 4 ? '20%' : stars === 3 ? '7%' : stars === 2 ? '2%' : '1%'}
+                              {reviewsData.distribution?.[stars] || 0}%
                             </span>
                           </div>
                         ))}
                       </div>
                     </div>
-                  </div>
 
-                  {course.reviews.map((review, index) => (
-                    <div key={index} className="bg-[#091328] rounded-2xl p-6 border border-white/5">
-                      <div className="flex items-start justify-between mb-3">
+                    {/* Add Review Button */}
+                    <button
+                      onClick={() => setShowReviewForm(!showReviewForm)}
+                      className="w-full py-3 bg-[#192540] text-white rounded-xl font-medium hover:bg-[#253550] transition flex items-center justify-center gap-2"
+                    >
+                      <ThumbsUp className="w-4 h-4" />
+                      {showReviewForm ? 'Cancel Review' : 'Write a Review'}
+                    </button>
+
+                    {/* Review Form */}
+                    {showReviewForm && (
+                      <form onSubmit={handleSubmitReview} className="mt-4 p-4 bg-[#0f1930] rounded-xl space-y-4">
                         <div>
-                          <p className="font-bold">{review.name}</p>
-                          <div className="flex items-center gap-2 mt-1">
-                            <div className="flex">
-                              {[...Array(5)].map((_, i) => (
-                                <Star key={i} className={`w-3 h-3 ${i < review.rating ? 'text-yellow-400 fill-current' : 'text-slate-600'}`} />
-                              ))}
-                            </div>
-                            <span className="text-sm text-slate-400">{review.date}</span>
+                          <label className="block text-sm text-slate-400 mb-2">Your Rating</label>
+                          <div className="flex gap-2">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <button
+                                key={star}
+                                type="button"
+                                onClick={() => setReviewForm({ ...reviewForm, rating: star })}
+                                className="focus:outline-none"
+                              >
+                                <Star className={`w-6 h-6 ${star <= reviewForm.rating ? 'text-yellow-400 fill-current' : 'text-slate-600'}`} />
+                              </button>
+                            ))}
                           </div>
                         </div>
-                      </div>
-                      <p className="text-slate-300">{review.comment}</p>
+                        <div>
+                          <label className="block text-sm text-slate-400 mb-2">Your Review</label>
+                          <textarea
+                            value={reviewForm.comment}
+                            onChange={(e) => setReviewForm({ ...reviewForm, comment: e.target.value })}
+                            placeholder="Share your experience with this course..."
+                            className="w-full px-4 py-3 bg-[#192540] border border-white/10 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-[#5764f1]"
+                            rows={4}
+                          />
+                        </div>
+                        <button
+                          type="submit"
+                          disabled={submittingReview}
+                          className="w-full py-3 bg-gradient-to-r from-[#5764f1] to-[#c081ff] text-white rounded-xl font-medium hover:shadow-lg transition disabled:opacity-50"
+                        >
+                          {submittingReview ? 'Submitting...' : 'Submit Review'}
+                        </button>
+                      </form>
+                    )}
+                  </div>
+
+                  {/* Reviews List */}
+                  {reviewsLoading ? (
+                    <div className="flex justify-center py-8">
+                      <Loader2 className="w-8 h-8 animate-spin text-[#5764f1]" />
                     </div>
-                  ))}
+                  ) : (
+                    (reviewsData.reviews || []).map((review, index) => (
+                      <div key={index} className="bg-[#091328] rounded-2xl p-6 border border-white/5">
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#5764f1] to-[#c081ff] flex items-center justify-center text-white font-bold">
+                              {review.name?.charAt(0).toUpperCase() || 'U'}
+                            </div>
+                            <div>
+                              <p className="font-bold">{review.name}</p>
+                              <div className="flex items-center gap-2 mt-1">
+                                <div className="flex">
+                                  {[...Array(5)].map((_, i) => (
+                                    <Star key={i} className={`w-3 h-3 ${i < review.rating ? 'text-yellow-400 fill-current' : 'text-slate-600'}`} />
+                                  ))}
+                                </div>
+                                <span className="text-sm text-slate-400">
+                                  {review.createdAt ? new Date(review.createdAt).toLocaleDateString() : ''}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <p className="text-slate-300">{review.comment}</p>
+                      </div>
+                    ))
+                  )}
+
+                  {!reviewsLoading && (reviewsData.reviews || []).length === 0 && (
+                    <div className="text-center py-8 text-slate-400">
+                      <p>No reviews yet. Be the first to review this course!</p>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -447,8 +660,24 @@ export default function CourseDetails() {
                     </div>
                   </div>
 
-                  <button className="w-full py-4 bg-gradient-to-r from-[#5764f1] to-[#c081ff] text-white rounded-xl font-bold text-lg hover:shadow-[0_0_30px_rgba(87,100,241,0.5)] transition mb-4">
-                    Enroll Now - ${course.price}
+                  <button 
+                    onClick={handleEnroll}
+                    disabled={enrolling || enrollSuccess}
+                    className="w-full py-4 bg-gradient-to-r from-[#5764f1] to-[#c081ff] text-white rounded-xl font-bold text-lg hover:shadow-[0_0_30px_rgba(87,100,241,0.5)] transition mb-4 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {enrolling ? (
+                      <span className="flex items-center justify-center gap-2">
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        Enrolling...
+                      </span>
+                    ) : enrollSuccess ? (
+                      <span className="flex items-center justify-center gap-2">
+                        <CheckCircle className="w-5 h-5" />
+                        Enrolled! Redirecting...
+                      </span>
+                    ) : (
+                      `Enroll Now - $${course.price}`
+                    )}
                   </button>
                   
                   <button className="w-full py-3 border border-white/20 text-white rounded-xl font-medium hover:bg-white/5 transition">
@@ -489,31 +718,61 @@ export default function CourseDetails() {
                   <div className="space-y-3">
                     <div className="flex items-center gap-3 text-sm">
                       <Video className="w-4 h-4 text-[#5764f1]" />
-                      <span>HD Video Lessons</span>
+                      <span>{course.duration || 'N/A'} of HD video content</span>
                     </div>
                     <div className="flex items-center gap-3 text-sm">
                       <BookOpen className="w-4 h-4 text-[#5764f1]" />
-                      <span>Study Materials</span>
+                      <span>{course.lectures || course.lessons?.length || 0} comprehensive lectures</span>
+                    </div>
+                    <div className="flex items-center gap-3 text-sm">
+                      <Download className="w-4 h-4 text-[#5764f1]" />
+                      <span>{course.resources?.length || 'Multiple'} downloadable resources</span>
+                    </div>
+                    <div className="flex items-center gap-3 text-sm">
+                      <Globe className="w-4 h-4 text-[#5764f1]" />
+                      <span>Available in {course.language || 'English'}</span>
                     </div>
                     <div className="flex items-center gap-3 text-sm">
                       <HelpCircle className="w-4 h-4 text-[#5764f1]" />
-                      <span>Q&A Support</span>
+                      <span>24/7 Q&A Support</span>
                     </div>
                     <div className="flex items-center gap-3 text-sm">
-                      <MessageCircle className="w-4 h-4 text-[#5764f1]" />
-                      <span>Community Access</span>
+                      <Award className="w-4 h-4 text-[#5764f1]" />
+                      <span>Certificate of completion</span>
+                    </div>
+                    <div className="flex items-center gap-3 text-sm">
+                      <Calendar className="w-4 h-4 text-[#5764f1]" />
+                      <span>Full lifetime access</span>
                     </div>
                     <div className="flex items-center gap-3 text-sm">
                       <CheckCircle className="w-4 h-4 text-[#5764f1]" />
-                      <span>30-day guarantee</span>
+                      <span>30-day money-back guarantee</span>
                     </div>
                   </div>
+                  
+                  {/* Additional Course Features */}
+                  {(course.whatYouWillLearn?.length > 0 || course.topics?.length > 0) && (
+                    <div className="mt-4 pt-4 border-t border-white/10">
+                      <p className="text-xs text-slate-400 mb-2">Key Topics:</p>
+                      <div className="flex flex-wrap gap-1">
+                        {(course.topics || course.whatYouWillLearn || []).slice(0, 5).map((topic, idx) => (
+                          <span key={idx} className="text-xs px-2 py-1 bg-[#192540] rounded text-slate-300">
+                            {topic}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
           </div>
         </div>
       </main>
+      <AIChat 
+        courseTitle={course.title} 
+        courseContent={`${course.description || ''}. Topics: ${course.topics?.join(', ') || course.tags?.join(', ') || 'Various topics'}. Learning outcomes: ${course.whatYouWillLearn?.join(', ') || course.learningOutcomes?.join(', ') || 'Course fundamentals'}`} 
+      />
     </div>
   );
 }

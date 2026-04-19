@@ -32,6 +32,7 @@ const Admin = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [users, setUsers] = useState([]);
   const [courses, setCourses] = useState([]);
+  const [enrollments, setEnrollments] = useState([]);
   const [stats, setStats] = useState({});
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddUserModal, setShowAddUserModal] = useState(false);
@@ -44,6 +45,7 @@ const Admin = () => {
 
   useEffect(() => {
     fetchAdminData();
+    fetchEnrollments();
   }, []);
 
   const handleUnauthorized = () => {
@@ -96,9 +98,47 @@ const Admin = () => {
     }
   };
 
+  const fetchEnrollments = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const res = await fetch('http://localhost:5000/api/enrollments', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setEnrollments(data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch enrollments:', error);
+    }
+  };
+
   const handleLogout = () => {
     logout();
     window.location.href = '/admin/login';
+  };
+
+  const handleDeleteEnrollment = async (enrollmentId) => {
+    if (!confirm('Are you sure you want to remove this enrollment?')) return;
+    
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`http://localhost:5000/api/enrollments/${enrollmentId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (res.ok) {
+        setEnrollments(enrollments.filter(e => e._id !== enrollmentId));
+        fetchAdminData(); // Refresh stats
+      } else {
+        alert('Failed to delete enrollment');
+      }
+    } catch (error) {
+      console.error('Failed to delete enrollment:', error);
+    }
   };
 
   const handleDeleteUser = async (userId) => {
@@ -349,6 +389,20 @@ const Admin = () => {
             <span className="ml-auto px-2 py-0.5 bg-[#5764f1]/20 text-[#9fa7ff] text-xs rounded-full">{courses.length}</span>
           </button>
           <button
+            onClick={() => setActiveTab('enrollments')}
+            className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl font-medium transition ${
+              activeTab === 'enrollments' 
+                ? 'bg-gradient-to-r from-[#5764f1]/20 to-[#c081ff]/20 text-[#9fa7ff] border border-[#5764f1]/30' 
+                : 'text-slate-400 hover:bg-white/5 hover:text-white'
+            }`}
+          >
+            <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${activeTab === 'enrollments' ? 'bg-[#5764f1]/20' : 'bg-white/5'}`}>
+              <Activity className="w-5 h-5" />
+            </div>
+            <span>Enrollments</span>
+            <span className="ml-auto px-2 py-0.5 bg-[#5764f1]/20 text-[#9fa7ff] text-xs rounded-full">{stats.stats?.totalEnrollments || 0}</span>
+          </button>
+          <button
             onClick={() => setActiveTab('settings')}
             className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl font-medium transition ${
               activeTab === 'settings' 
@@ -423,7 +477,10 @@ const Admin = () => {
                   </div>
                 </div>
                 
-                <div className="bg-[#091328] rounded-2xl p-6 border border-white/5 hover:border-[#5764f1]/30 transition group">
+                <div 
+                  onClick={() => setActiveTab('courses')}
+                  className="bg-[#091328] rounded-2xl p-6 border border-white/5 hover:border-[#5764f1]/30 transition group cursor-pointer"
+                >
                   <div className="flex items-start justify-between mb-4">
                     <div className="w-12 h-12 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-xl flex items-center justify-center">
                       <CoursesIcon className="w-6 h-6 text-purple-400" />
@@ -440,7 +497,10 @@ const Admin = () => {
                   </div>
                 </div>
                 
-                <div className="bg-[#091328] rounded-2xl p-6 border border-white/5 hover:border-[#5764f1]/30 transition group">
+                <div 
+                  onClick={() => setActiveTab('enrollments')}
+                  className="bg-[#091328] rounded-2xl p-6 border border-white/5 hover:border-[#5764f1]/30 transition group cursor-pointer"
+                >
                   <div className="flex items-start justify-between mb-4">
                     <div className="w-12 h-12 bg-gradient-to-br from-green-500/20 to-emerald-500/20 rounded-xl flex items-center justify-center">
                       <Activity className="w-6 h-6 text-green-400" />
@@ -692,6 +752,94 @@ const Admin = () => {
                     </div>
                   </div>
                 ))}
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'enrollments' && (
+            <div className="bg-[#091328] rounded-2xl border border-white/5 p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                  <Activity className="w-5 h-5 text-[#5764f1]" />
+                  Manage Enrollments
+                </h2>
+                <button
+                  onClick={() => setShowAssignCourseModal(true)}
+                  className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#5764f1] to-[#c081ff] text-white rounded-lg text-sm font-medium hover:shadow-lg transition"
+                >
+                  <UserPlus className="w-4 h-4" />
+                  Assign Course
+                </button>
+              </div>
+              
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-white/10">
+                      <th className="text-left py-3 px-4 text-slate-400 font-medium text-sm">Student</th>
+                      <th className="text-left py-3 px-4 text-slate-400 font-medium text-sm">Course</th>
+                      <th className="text-left py-3 px-4 text-slate-400 font-medium text-sm">Progress</th>
+                      <th className="text-left py-3 px-4 text-slate-400 font-medium text-sm">Enrolled Date</th>
+                      <th className="text-center py-3 px-4 text-slate-400 font-medium text-sm">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/5">
+                    {enrollments.map((enrollment) => (
+                      <tr key={enrollment._id} className="hover:bg-white/5 transition">
+                        <td className="py-3 px-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#5764f1] to-[#c081ff] flex items-center justify-center text-white font-bold text-sm">
+                              {enrollment.user?.name?.charAt(0).toUpperCase() || 'U'}
+                            </div>
+                            <div>
+                              <p className="font-medium text-white">{enrollment.user?.name}</p>
+                              <p className="text-xs text-slate-400">{enrollment.user?.email}</p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="py-3 px-4">
+                          <p className="text-white">{enrollment.course?.title}</p>
+                        </td>
+                        <td className="py-3 px-4">
+                          <div className="flex items-center gap-2">
+                            <div className="w-24 h-2 bg-[#192540] rounded-full overflow-hidden">
+                              <div 
+                                className="h-full bg-gradient-to-r from-[#5764f1] to-[#c081ff] rounded-full transition-all"
+                                style={{ width: `${enrollment.progress || 0}%` }}
+                              />
+                            </div>
+                            <span className="text-sm text-slate-400">{enrollment.progress || 0}%</span>
+                          </div>
+                        </td>
+                        <td className="py-3 px-4 text-slate-400 text-sm">
+                          {enrollment.createdAt ? new Date(enrollment.createdAt).toLocaleDateString() : 'N/A'}
+                        </td>
+                        <td className="py-3 px-4 text-center">
+                          <button
+                            onClick={() => handleDeleteEnrollment(enrollment._id)}
+                            className="p-2 text-red-400 hover:bg-red-400/10 rounded-lg transition"
+                            title="Remove Enrollment"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                
+                {enrollments.length === 0 && (
+                  <div className="text-center py-12">
+                    <Activity className="w-12 h-12 text-slate-500 mx-auto mb-4" />
+                    <p className="text-slate-400">No enrollments found</p>
+                    <button
+                      onClick={() => setShowAssignCourseModal(true)}
+                      className="mt-4 text-[#5764f1] hover:underline text-sm"
+                    >
+                      Assign a course to a student
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           )}

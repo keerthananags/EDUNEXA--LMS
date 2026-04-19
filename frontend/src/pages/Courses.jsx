@@ -46,22 +46,17 @@ export default function Courses() {
       const token = localStorage.getItem('token');
       console.log('Fetching courses with token:', token ? 'Present' : 'Missing');
       
-      const response = await fetch('http://localhost:5000/api/courses', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+      // Public endpoint - auth is optional
+      const headers = {
+        'Content-Type': 'application/json',
+      };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      
+      const response = await fetch('http://localhost:5000/api/courses', { headers });
       
       console.log('Courses response status:', response.status);
-      
-      // Handle 401 - redirect to login
-      if (response.status === 401) {
-        alert('Session expired. Please login again.');
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        navigate('/login');
-        return;
-      }
       
       if (response.ok) {
         const data = await response.json();
@@ -246,16 +241,7 @@ export default function Courses() {
               <h1 className="text-3xl font-bold text-gray-900">Explore Courses</h1>
               <p className="text-gray-500 mt-1">Discover your next learning adventure</p>
             </div>
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2 px-4 py-2 bg-blue-50 rounded-xl">
-                <Award className="w-5 h-5 text-blue-600" />
-                <span className="text-sm font-medium text-blue-600">12 Certificates</span>
-              </div>
-              <div className="flex items-center gap-2 px-4 py-2 bg-green-50 rounded-xl">
-                <Zap className="w-5 h-5 text-green-600" />
-                <span className="text-sm font-medium text-green-600">2,450 XP</span>
-              </div>
-            </div>
+            {/* Badges removed */}
           </div>
 
           {/* Tabs & Search */}

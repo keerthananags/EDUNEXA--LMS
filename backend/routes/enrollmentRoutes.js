@@ -6,7 +6,9 @@ const {
   updateProgress,
   getCourseStudents,
   adminAssignCourse,
+  getAllEnrollments,
 } = require('../controllers/enrollmentController');
+const Enrollment = require('../models/Enrollment');
 const { protect, adminOnly, instructorOrAdmin } = require('../middleware/auth');
 
 /**
@@ -193,5 +195,22 @@ router.get('/course/:courseId', protect, instructorOrAdmin, getCourseStudents);
  *         description: User or course not found
  */
 router.post('/admin-assign', protect, adminOnly, adminAssignCourse);
+
+// Admin: Get all enrollments
+router.get('/', protect, adminOnly, getAllEnrollments);
+
+// Admin: Delete enrollment
+router.delete('/:id', protect, adminOnly, async (req, res) => {
+  try {
+    const enrollment = await Enrollment.findById(req.params.id);
+    if (!enrollment) {
+      return res.status(404).json({ message: 'Enrollment not found' });
+    }
+    await Enrollment.deleteOne({ _id: req.params.id });
+    res.json({ message: 'Enrollment removed' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
 
 module.exports = router;

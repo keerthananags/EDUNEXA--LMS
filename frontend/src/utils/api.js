@@ -60,4 +60,15 @@ export const adminAPI = {
   publishCourse: (id, publish) => fetchWithAuth(`/admin/courses/${id}/publish`, { method: 'PUT', body: JSON.stringify({ publish }) }),
 };
 
-export default { authAPI, courseAPI, enrollmentAPI, adminAPI };
+// AI Chat API
+export const aiAPI = {
+  chat: (data) => fetchWithAuth('/ai/chat', { method: 'POST', body: JSON.stringify(data) }),
+};
+
+// Quiz API
+export const quizAPI = {
+  generate: (data) => fetchWithAuth('/quizzes/generate', { method: 'POST', body: JSON.stringify(data) }),
+  evaluate: (data) => fetchWithAuth('/quizzes/evaluate', { method: 'POST', body: JSON.stringify(data) }),
+};
+
+export default { authAPI, courseAPI, enrollmentAPI, adminAPI, aiAPI, quizAPI };
