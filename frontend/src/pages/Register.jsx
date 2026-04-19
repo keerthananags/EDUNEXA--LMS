@@ -25,17 +25,17 @@ const Register = () => {
     try {
       // 🔹 Register user
       const response = await fetch(`${API_BASE_URL}/auth/register`, {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json",
-  },
-  body: JSON.stringify({
-    name,
-    email,
-    password,
-    role: "student",
-  }),
-});
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name,
+          email,
+          password,
+          role: "student",
+        }),
+      });
       const data = await response.json();
 
       if (!response.ok) {

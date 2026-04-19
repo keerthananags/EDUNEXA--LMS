@@ -21,13 +21,16 @@ app.use(
   })
 );
 
+// Parse JSON bodies
+app.use(express.json());
+
 // Swagger
 setupSwagger(app);
 
 // Health check
 app.get("/", (req, res) => {
   res.json({
-    message: "EduNexa LMS API is running 🚀",
+    message: "EduNexa LMS API is running ",
   });
 });
 
