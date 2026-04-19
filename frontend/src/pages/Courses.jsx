@@ -54,8 +54,18 @@ export default function Courses() {
         headers['Authorization'] = `Bearer ${token}`;
       }
       
-      const response = await fetch('http://localhost:5000/api/courses', { headers });
-      
+     // ✅ Add at top of file
+const API_BASE_URL = import.meta.env.VITE_API_URL;
+
+if (!API_BASE_URL) {
+  throw new Error("VITE_API_URL not set");
+}
+
+// 🔹 Fetch courses
+const response = await fetch(`${API_BASE_URL}/courses`, {
+  method: "GET",
+  headers,
+});
       console.log('Courses response status:', response.status);
       
       if (response.ok) {
@@ -111,11 +121,21 @@ export default function Courses() {
       const token = localStorage.getItem('token');
       console.log('Fetching my enrollments...');
       
-      const response = await fetch('http://localhost:5000/api/my-courses', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+     // ✅ Add at top (if not already added)
+const API_BASE_URL = import.meta.env.VITE_API_URL;
+
+if (!API_BASE_URL) {
+  throw new Error("VITE_API_URL not set");
+}
+
+// 🔹 Fetch my courses
+const response = await fetch(`${API_BASE_URL}/my-courses`, {
+  method: "GET",
+  headers: {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${token}`,
+  },
+});
       
       console.log('My courses response status:', response.status);
       
@@ -172,13 +192,21 @@ export default function Courses() {
       console.log('Enrolling in course:', courseId);
       console.log('Token present:', token ? 'Yes' : 'No');
       
-      const response = await fetch(`http://localhost:5000/api/enroll/${courseId}`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
+      // ✅ Add at top (if not already present)
+const API_BASE_URL = import.meta.env.VITE_API_URL;
+
+if (!API_BASE_URL) {
+  throw new Error("VITE_API_URL not set");
+}
+
+// 🔹 Enroll in course
+const response = await fetch(`${API_BASE_URL}/enroll/${courseId}`, {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${token}`,
+  },
+});
       
       const data = await response.json();
       console.log('Enrollment response:', response.status, data);

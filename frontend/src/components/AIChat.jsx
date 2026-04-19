@@ -42,7 +42,18 @@ export default function AIChat({ courseTitle, courseContent }) {
       }
 
       // Test if backend is reachable first
-      const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+      const API_BASE_URL = import.meta.env.VITE_API_URL;
+
+      // Safety check
+      if (!API_BASE_URL) {
+        setMessages(prev => [...prev, { 
+          role: 'assistant', 
+          content: 'API URL not configured. Please check your environment settings.' 
+        }]);
+        setIsLoading(false);
+        return;
+      }
+
       try {
         const healthCheck = await fetch(`${API_BASE_URL.replace('/api', '')}/`, { 
           method: 'GET',

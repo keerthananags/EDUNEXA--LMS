@@ -26,8 +26,7 @@ import Sidebar from "../components/Sidebar";
 import TopNavBar from "../components/TopNavBar";
 import AIChat from "../components/AIChat";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 export default function NewDashboard() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("week");

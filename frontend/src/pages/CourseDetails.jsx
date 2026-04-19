@@ -28,8 +28,13 @@ import Sidebar from "../components/Sidebar";
 import AIChat from "../components/AIChat";
 import { enrollmentAPI } from '../utils/api';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL ||
+  (import.meta.env.DEV ? "http://localhost:5000/api" : null);
 
+if (!API_BASE_URL) {
+  throw new Error("API URL not configured");
+}
 const courseDataFallback = {
   1: {
     id: 1,
@@ -371,11 +376,11 @@ export default function CourseDetails() {
                           <Star key={i} className={`w-4 h-4 ${i < Math.floor(course.rating) ? 'text-yellow-400 fill-current' : 'text-slate-600'}`} />
                         ))}
                       </div>
-                      <span className="text-slate-400">({course.totalRatings.toLocaleString()} ratings)</span>
+                      <span className="text-slate-400">({course.totalRatings?.toLocaleString() || '0'} ratings)</span>
                     </div>
                     <div className="flex items-center gap-1 text-slate-400">
                       <Users className="w-4 h-4" />
-                      {course.students.toLocaleString()} students
+                      {course.students?.toLocaleString() || '0'} students
                     </div>
                     <div className="flex items-center gap-1 text-slate-400">
                       <Clock className="w-4 h-4" />
@@ -655,7 +660,7 @@ export default function CourseDetails() {
                       <div className="flex items-center gap-2 mt-1">
                         <Star className="w-4 h-4 text-yellow-400 fill-current" />
                         <span className="text-sm">{course.instructor.rating}</span>
-                        <span className="text-sm text-slate-400">• {course.instructor.students.toLocaleString()} students</span>
+                        <span className="text-sm text-slate-400">• {course.instructor?.students?.toLocaleString() || '0'} students</span>
                       </div>
                     </div>
                   </div>

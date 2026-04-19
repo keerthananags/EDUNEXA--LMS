@@ -3,7 +3,13 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { BookOpen, ArrowLeft, TrendingUp, Users, Award, Clock, Loader2 } from "lucide-react";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL ||
+  (import.meta.env.DEV ? "http://localhost:5000/api" : null);
+
+if (!API_BASE_URL) {
+  throw new Error("API URL not configured");
+}
 
 export default function Analytics() {
   const { user } = useAuth();

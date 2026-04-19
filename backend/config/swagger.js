@@ -1,18 +1,22 @@
 const swaggerUi = require("swagger-ui-express");
 const swaggerJsdoc = require("swagger-jsdoc");
 
-const getSwaggerOptions = (baseUrl = "http://localhost:5000") => ({
+// 🔥 Generate Swagger options dynamically
+const getSwaggerOptions = (baseUrl) => ({
   definition: {
     openapi: "3.0.0",
     info: {
-      title: "LMS API Documentation",
+      title: "EduNexa LMS API",
       version: "1.0.0",
       description: "API documentation for EduNexa LMS",
     },
     servers: [
       {
-        url: baseUrl,
-        description: process.env.NODE_ENV === 'production' ? 'Production server' : 'Development server',
+        url: baseUrl, // ✅ Dynamic URL (auto detects Render / localhost)
+        description:
+          process.env.NODE_ENV === "production"
+            ? "Production Server"
+            : "Development Server",
       },
     ],
     components: {
@@ -24,45 +28,63 @@ const getSwaggerOptions = (baseUrl = "http://localhost:5000") => ({
         },
       },
     },
-    security: [
-      {
-        bearerAuth: [],
-      },
-    ],
+    security: [{ bearerAuth: [] }],
   },
-  // Paths to files containing OpenAPI definitions
   apis: ["./routes/*.js", "./server.js"],
 });
 
-// function to setup swagger
+// 🚀 Setup Swagger
 const setupSwagger = (app) => {
-  // Serve swagger UI static files first
+  // Serve static files
   app.use("/api-docs", swaggerUi.serve);
-  
-  // Dynamic swagger spec setup
+
+  // Swagger UI route
   app.get("/api-docs", (req, res, next) => {
-    const protocol = req.headers['x-forwarded-proto'] || req.protocol;
-    const host = req.headers['x-forwarded-host'] || req.headers.host;
-    const baseUrl = `${protocol}://${host}`;
-    
-    const options = getSwaggerOptions(baseUrl);
-    const swaggerSpec = swaggerJsdoc(options);
-    
-    swaggerUi.setup(swaggerSpec)(req, res, next);
+    try {
+      const protocol =
+        req.headers["x-forwarded-proto"] || req.protocol;
+
+      const host =
+        req.headers["x-forwarded-host"] || req.headers.host;
+
+      const baseUrl = `${protocol}://${host}`;
+
+      const swaggerSpec = swaggerJsdoc(
+        getSwaggerOptions(baseUrl)
+      );
+
+      swaggerUi.setup(swaggerSpec, {
+        explorer: true,
+      })(req, res, next);
+    } catch (err) {
+      console.error("Swagger UI Error:", err);
+      res.status(500).json({ message: "Swagger failed to load" });
+    }
   });
-  
-  // Also serve the spec as JSON with dynamic URL
+
+  // Swagger JSON endpoint
   app.get("/api-docs/swagger.json", (req, res) => {
-    const protocol = req.headers['x-forwarded-proto'] || req.protocol;
-    const host = req.headers['x-forwarded-host'] || req.headers.host;
-    const baseUrl = `${protocol}://${host}`;
-    
-    const options = getSwaggerOptions(baseUrl);
-    const swaggerSpec = swaggerJsdoc(options);
-    
-    res.setHeader("Content-Type", "application/json");
-    res.setHeader("Access-Control-Allow-Origin", "*");
-    res.send(swaggerSpec);
+    try {
+      const protocol =
+        req.headers["x-forwarded-proto"] || req.protocol;
+
+      const host =
+        req.headers["x-forwarded-host"] || req.headers.host;
+
+      const baseUrl = `${protocol}://${host}`;
+
+      const swaggerSpec = swaggerJsdoc(
+        getSwaggerOptions(baseUrl)
+      );
+
+      res.setHeader("Content-Type", "application/json");
+      res.setHeader("Access-Control-Allow-Origin", "*");
+
+      res.send(swaggerSpec);
+    } catch (err) {
+      console.error("Swagger JSON Error:", err);
+      res.status(500).json({ message: "Swagger JSON failed" });
+    }
   });
 };
 

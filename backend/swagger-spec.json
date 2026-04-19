@@ -5,7 +5,10 @@
     "version": "1.0.0",
     "description": "API documentation for EduNexa LMS"
   },
-  "servers": [{ "url": "http://localhost:5000" }],
+  "servers": [
+  { "url": "http://localhost:5000" },
+  { "url": "https://edunexa-lms-zx8q.onrender.com" }
+],
   "components": {
     "securitySchemes": {
       "bearerAuth": {

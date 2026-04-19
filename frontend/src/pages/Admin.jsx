@@ -26,6 +26,8 @@ import {
   UserPlus
 } from 'lucide-react';
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
 const Admin = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -63,373 +65,310 @@ const Admin = () => {
         handleUnauthorized();
         return;
       }
-      
+    
       // Fetch stats
-      const statsRes = await fetch('http://localhost:5000/api/admin/stats', {
+      const statsRes = await fetch(`${API_BASE_URL}/admin/stats`, {
         headers: { Authorization: `Bearer ${token}` }
       });
+      
       if (statsRes.status === 401) {
         handleUnauthorized();
         return;
       }
-      if (statsRes.ok) setStats(await statsRes.json());
+      
+      const statsData = await statsRes.json();
+      setStats(statsData);
 
       // Fetch users
-      const usersRes = await fetch('http://localhost:5000/api/admin/users', {
+      const usersRes = await fetch(`${API_BASE_URL}/admin/users`, {
         headers: { Authorization: `Bearer ${token}` }
       });
+
       if (usersRes.status === 401) {
         handleUnauthorized();
         return;
       }
-      if (usersRes.ok) setUsers(await usersRes.json());
+
+      if (!usersRes.ok) throw new Error("Failed to fetch users");
+
+      const usersData = await usersRes.json();
+      setUsers(usersData);
 
       // Fetch courses
-      const coursesRes = await fetch('http://localhost:5000/api/admin/courses', {
+      const coursesRes = await fetch(`${API_BASE_URL}/admin/courses`, {
         headers: { Authorization: `Bearer ${token}` }
       });
+
       if (coursesRes.status === 401) {
         handleUnauthorized();
         return;
       }
-      if (coursesRes.ok) setCourses(await coursesRes.json());
+
+      if (!coursesRes.ok) throw new Error("Failed to fetch courses");
+
+      const coursesData = await coursesRes.json();
+      setCourses(coursesData);
+
     } catch (error) {
-      console.error('Failed to fetch admin data:', error);
+      console.error("❌ Failed to fetch admin data:", error);
     }
   };
 
+  // Fetch Enrollments
   const fetchEnrollments = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem("token");
       if (!token) return;
 
-      const res = await fetch('http://localhost:5000/api/enrollments', {
-        headers: { Authorization: `Bearer ${token}` }
+      const res = await fetch(`${API_BASE_URL}/enrollments`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
       });
-      if (res.ok) {
-        const data = await res.json();
-        setEnrollments(data);
+
+      if (res.status === 401) {
+        handleUnauthorized();
+        return;
       }
+
+      if (!res.ok) {
+        throw new Error("Failed to fetch enrollments");
+      }
+
+      const data = await res.json();
+      setEnrollments(data);
+
     } catch (error) {
-      console.error('Failed to fetch enrollments:', error);
+      console.error("❌ Failed to fetch enrollments:", error);
     }
   };
 
+  // Logout
   const handleLogout = () => {
     logout();
-    window.location.href = '/admin/login';
+    window.location.href = "/admin/login";
   };
 
+  // Delete Enrollment
   const handleDeleteEnrollment = async (enrollmentId) => {
-    if (!confirm('Are you sure you want to remove this enrollment?')) return;
-    
-    try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(`http://localhost:5000/api/enrollments/${enrollmentId}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      if (res.ok) {
-        setEnrollments(enrollments.filter(e => e._id !== enrollmentId));
-        fetchAdminData(); // Refresh stats
-      } else {
-        alert('Failed to delete enrollment');
-      }
-    } catch (error) {
-      console.error('Failed to delete enrollment:', error);
-    }
-  };
+    if (!window.confirm("Are you sure you want to remove this enrollment?")) return;
 
-  const handleDeleteUser = async (userId) => {
-    if (!window.confirm('Are you sure you want to delete this user?')) return;
-    
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(`http://localhost:5000/api/admin/users/${userId}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` }
+      const token = localStorage.getItem("token");
+
+      const res = await fetch(`${API_BASE_URL}/enrollments/${enrollmentId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       });
-      
+
       if (res.status === 401) {
         handleUnauthorized();
         return;
       }
-      
-      if (res.ok) {
-        setUsers(users.filter(u => u._id !== userId));
+
+      if (!res.ok) {
+        throw new Error("Failed to delete enrollment");
       }
+
+      setEnrollments(enrollments.filter(e => e._id !== enrollmentId));
+      fetchAdminData(); // refresh stats
+
     } catch (error) {
-      console.error('Failed to delete user:', error);
+      console.error("❌ Failed to delete enrollment:", error);
     }
   };
 
+  // Delete User
+  const handleDeleteUser = async (userId) => {
+    if (!window.confirm("Are you sure you want to delete this user?")) return;
+
+    try {
+      const token = localStorage.getItem("token");
+
+      const res = await fetch(`${API_BASE_URL}/admin/users/${userId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (res.status === 401) {
+        handleUnauthorized();
+        return;
+      }
+
+      if (!res.ok) {
+        throw new Error("Failed to delete user");
+      }
+
+      setUsers(users.filter(u => u._id !== userId));
+
+    } catch (error) {
+      console.error("❌ Failed to delete user:", error);
+    }
+  };
+
+  // Update User Role
   const handleUpdateUserRole = async (userId, newRole) => {
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(`http://localhost:5000/api/admin/users/${userId}/role`, {
-        method: 'PUT',
+      const token = localStorage.getItem("token");
+
+      const res = await fetch(`${API_BASE_URL}/admin/users/${userId}/role`, {
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ role: newRole })
+        body: JSON.stringify({ role: newRole }),
       });
-      
-      if (res.status === 401) {
-        handleUnauthorized();
-        return;
-      }
-      
-      if (res.ok) {
-        setUsers(users.map(u => u._id === userId ? { ...u, role: newRole } : u));
-      }
+
+      if (res.status === 401) return handleUnauthorized();
+      if (!res.ok) throw new Error("Failed to update role");
+
+      setUsers(users.map(u => u._id === userId ? { ...u, role: newRole } : u));
     } catch (error) {
-      console.error('Failed to update user role:', error);
+      console.error("❌ Update role error:", error);
     }
   };
 
+  // Add User
   const handleAddUser = async (e) => {
     e.preventDefault();
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:5000/api/admin/users', {
-        method: 'POST',
+      const token = localStorage.getItem("token");
+
+      const res = await fetch(`${API_BASE_URL}/admin/users`, {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(newUser)
+        body: JSON.stringify(newUser),
       });
-      
-      if (res.status === 401) {
-        handleUnauthorized();
-        return;
-      }
-      
-      if (res.ok) {
-        const data = await res.json();
-        setUsers([...users, data]);
-        setShowAddUserModal(false);
-        setNewUser({ name: '', email: '', password: '', role: 'student' });
-      }
+
+      if (res.status === 401) return handleUnauthorized();
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message);
+
+      setUsers([...users, data]);
+      setShowAddUserModal(false);
+      setNewUser({ name: "", email: "", password: "", role: "student" });
+
     } catch (error) {
-      console.error('Failed to add user:', error);
+      console.error("❌ Add user error:", error);
     }
   };
 
+  // Add Course
   const handleAddCourse = async (e) => {
     e.preventDefault();
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:5000/api/courses', {
-        method: 'POST',
+      const token = localStorage.getItem("token");
+
+      const res = await fetch(`${API_BASE_URL}/courses`, {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(newCourse)
+        body: JSON.stringify(newCourse),
       });
-      
-      if (res.status === 401) {
-        handleUnauthorized();
-        return;
-      }
-      
-      if (res.ok) {
-        const data = await res.json();
-        setCourses([...courses, data]);
-        setShowAddCourseModal(false);
-        setNewCourse({ title: '', description: '', category: 'Development', level: 'beginner', price: 0 });
-        alert('Course created successfully! It will be unpublished by default.');
-      } else {
-        const errorData = await res.json().catch(() => ({}));
-        alert(errorData.message || 'Failed to create course');
-      }
+
+      if (res.status === 401) return handleUnauthorized();
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message);
+
+      setCourses([...courses, data]);
+      setShowAddCourseModal(false);
+      setNewCourse({
+        title: "",
+        description: "",
+        category: "Development",
+        level: "beginner",
+        price: 0,
+      });
+
+      alert("✅ Course created");
+
     } catch (error) {
-      console.error('Failed to add course:', error);
-      alert('Failed to create course. Please try again.');
+      console.error("❌ Add course error:", error);
+      alert(error.message);
     }
   };
 
+  // Assign Course
   const handleAssignCourse = async (e) => {
     e.preventDefault();
+
     if (!assignCourse.userId || !assignCourse.courseId) {
-      alert('Please select both a user and a course');
-      return;
+      return alert("Select user & course");
     }
-    
+
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:5000/api/enrollments/admin-assign', {
-        method: 'POST',
+      const token = localStorage.getItem("token");
+
+      const res = await fetch(`${API_BASE_URL}/enrollments/admin-assign`, {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(assignCourse)
+        body: JSON.stringify(assignCourse),
       });
-      
-      if (res.status === 401) {
-        handleUnauthorized();
-        return;
-      }
-      
-      if (res.ok) {
-        const data = await res.json();
-        setShowAssignCourseModal(false);
-        setAssignCourse({ userId: '', courseId: '' });
-        alert(`Course assigned successfully to ${data.enrollment.student?.name || 'user'}!`);
-        // Refresh stats to show updated enrollments
-        fetchAdminData();
-      } else {
-        const errorData = await res.json().catch(() => ({}));
-        alert(errorData.message || 'Failed to assign course');
-      }
+
+      if (res.status === 401) return handleUnauthorized();
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message);
+
+      setShowAssignCourseModal(false);
+      setAssignCourse({ userId: "", courseId: "" });
+
+      alert(`✅ Assigned to ${data.enrollment?.student?.name || "user"}`);
+      fetchAdminData();
+
     } catch (error) {
-      console.error('Failed to assign course:', error);
-      alert('Failed to assign course. Please try again.');
+      console.error("❌ Assign error:", error);
+      alert(error.message);
     }
   };
 
+  // Toggle Publish Course
   const handleTogglePublishCourse = async (courseId, currentStatus) => {
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(`http://localhost:5000/api/courses/${courseId}`, {
-        method: 'PUT',
+      const token = localStorage.getItem("token");
+
+      const res = await fetch(`${API_BASE_URL}/courses/${courseId}`, {
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ isPublished: !currentStatus })
+        body: JSON.stringify({ isPublished: !currentStatus }),
       });
-      
-      if (res.status === 401) {
-        handleUnauthorized();
-        return;
-      }
-      
-      if (res.ok) {
-        const updatedCourse = await res.json();
-        setCourses(courses.map(c => c._id === courseId ? updatedCourse : c));
-        alert(`Course ${!currentStatus ? 'published' : 'unpublished'} successfully!`);
-      } else {
-        const errorData = await res.json().catch(() => ({}));
-        alert(errorData.message || 'Failed to update course status');
-      }
+
+      if (res.status === 401) return handleUnauthorized();
+
+      const updatedCourse = await res.json();
+      if (!res.ok) throw new Error("Update failed");
+
+      setCourses(courses.map(c => c._id === courseId ? updatedCourse : c));
+      alert(`✅ ${!currentStatus ? "Published" : "Unpublished"}`);
+
     } catch (error) {
-      console.error('Failed to toggle publish status:', error);
-      alert('Failed to update course status. Please try again.');
+      console.error("❌ Publish error:", error);
+      alert(error.message);
     }
   };
 
-  const filteredUsers = users.filter(u =>
-    u.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    u.email?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
   return (
-    <div className="bg-[#060e20] text-[#dee5ff] min-h-screen flex">
-      {/* Sidebar */}
-      <aside className="w-64 bg-[#000000] border-r border-white/5 hidden md:flex flex-col">
-        <div className="p-6 border-b border-white/5">
-          <Link to="/" className="flex items-center space-x-3">
-            <div className="w-12 h-12 bg-gradient-to-br from-[#5764f1] to-[#c081ff] rounded-xl flex items-center justify-center shadow-lg shadow-purple-500/20">
-              <Shield className="w-7 h-7 text-white" />
-            </div>
-            <div>
-              <span className="text-xl font-bold bg-gradient-to-r from-[#5764f1] to-[#c081ff] bg-clip-text text-transparent">
-                EduNexa
-              </span>
-              <p className="text-xs text-slate-400">Admin Portal</p>
-            </div>
-          </Link>
-        </div>
-
-        <nav className="flex-1 p-4 space-y-2">
-          <button
-            onClick={() => setActiveTab('dashboard')}
-            className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl font-medium transition ${
-              activeTab === 'dashboard' 
-                ? 'bg-gradient-to-r from-[#5764f1]/20 to-[#c081ff]/20 text-[#9fa7ff] border border-[#5764f1]/30' 
-                : 'text-slate-400 hover:bg-white/5 hover:text-white'
-            }`}
-          >
-            <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${activeTab === 'dashboard' ? 'bg-[#5764f1]/20' : 'bg-white/5'}`}>
-              <TrendingUp className="w-5 h-5" />
-            </div>
-            <span>Dashboard</span>
-          </button>
-          <button
-            onClick={() => setActiveTab('users')}
-            className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl font-medium transition ${
-              activeTab === 'users' 
-                ? 'bg-gradient-to-r from-[#5764f1]/20 to-[#c081ff]/20 text-[#9fa7ff] border border-[#5764f1]/30' 
-                : 'text-slate-400 hover:bg-white/5 hover:text-white'
-            }`}
-          >
-            <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${activeTab === 'users' ? 'bg-[#5764f1]/20' : 'bg-white/5'}`}>
-              <Users className="w-5 h-5" />
-            </div>
-            <span>Users</span>
-            <span className="ml-auto px-2 py-0.5 bg-[#5764f1]/20 text-[#9fa7ff] text-xs rounded-full">{users.length}</span>
-          </button>
-          <button
-            onClick={() => setActiveTab('courses')}
-            className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl font-medium transition ${
-              activeTab === 'courses' 
-                ? 'bg-gradient-to-r from-[#5764f1]/20 to-[#c081ff]/20 text-[#9fa7ff] border border-[#5764f1]/30' 
-                : 'text-slate-400 hover:bg-white/5 hover:text-white'
-            }`}
-          >
-            <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${activeTab === 'courses' ? 'bg-[#5764f1]/20' : 'bg-white/5'}`}>
-              <CoursesIcon className="w-5 h-5" />
-            </div>
-            <span>Courses</span>
-            <span className="ml-auto px-2 py-0.5 bg-[#5764f1]/20 text-[#9fa7ff] text-xs rounded-full">{courses.length}</span>
-          </button>
-          <button
-            onClick={() => setActiveTab('enrollments')}
-            className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl font-medium transition ${
-              activeTab === 'enrollments' 
-                ? 'bg-gradient-to-r from-[#5764f1]/20 to-[#c081ff]/20 text-[#9fa7ff] border border-[#5764f1]/30' 
-                : 'text-slate-400 hover:bg-white/5 hover:text-white'
-            }`}
-          >
-            <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${activeTab === 'enrollments' ? 'bg-[#5764f1]/20' : 'bg-white/5'}`}>
-              <Activity className="w-5 h-5" />
-            </div>
-            <span>Enrollments</span>
-            <span className="ml-auto px-2 py-0.5 bg-[#5764f1]/20 text-[#9fa7ff] text-xs rounded-full">{stats.stats?.totalEnrollments || 0}</span>
-          </button>
-          <button
-            onClick={() => setActiveTab('settings')}
-            className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl font-medium transition ${
-              activeTab === 'settings' 
-                ? 'bg-gradient-to-r from-[#5764f1]/20 to-[#c081ff]/20 text-[#9fa7ff] border border-[#5764f1]/30' 
-                : 'text-slate-400 hover:bg-white/5 hover:text-white'
-            }`}
-          >
-            <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${activeTab === 'settings' ? 'bg-[#5764f1]/20' : 'bg-white/5'}`}>
-              <Settings className="w-5 h-5" />
-            </div>
-            <span>Settings</span>
-          </button>
-        </nav>
-
-        <div className="p-4 border-t border-white/5">
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center space-x-3 px-4 py-3 text-red-400 hover:bg-red-500/10 rounded-xl font-medium transition border border-transparent hover:border-red-500/20"
-          >
-            <div className="w-10 h-10 rounded-lg bg-red-500/10 flex items-center justify-center">
-              <LogOut className="w-5 h-5" />
-            </div>
-            <span>Logout</span>
-          </button>
-        </div>
-      </aside>
-
+    <div className="min-h-screen bg-[#050b14] text-white">
       {/* Main Content */}
       <main className="flex-1 p-8 overflow-y-auto">
         <div className="max-w-7xl mx-auto">
