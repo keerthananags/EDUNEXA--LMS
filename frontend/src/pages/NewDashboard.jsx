@@ -657,29 +657,30 @@ export default function NewDashboard() {
                       cx="64" cy="64" fill="transparent" r="56" 
                       stroke="#9fa7ff" 
                       strokeDasharray="351.85" 
-                      strokeDashoffset="87.96" 
+                      strokeDashoffset={351.85 * (1 - stats.avgProgress / 100)} 
                       strokeLinecap="round"
                       strokeWidth="8"
+                      className="transition-all duration-1000"
                     />
                   </svg>
                   <div className="absolute flex flex-col items-center">
-                    <p className="text-2xl font-extrabold leading-none">75%</p>
+                    <p className="text-2xl font-extrabold leading-none">{stats.avgProgress}%</p>
                     <p className="text-[8px] text-slate-500 uppercase font-bold tracking-widest">Active</p>
                   </div>
                 </div>
                 <div className="flex justify-between items-center mb-6">
                   <div className="text-center">
-                    <p className="text-2xl font-extrabold">14</p>
-                    <p className="text-[10px] text-slate-500 uppercase font-bold">Streak</p>
+                    <p className="text-2xl font-extrabold">{stats.totalEnrollments > 0 ? Math.floor(stats.avgProgress / 10) : 0}</p>
+                    <p className="text-[10px] text-slate-500 uppercase font-bold">Day Streak</p>
                   </div>
                   <div className="h-8 w-[1px] bg-white/10"></div>
                   <div className="text-center">
-                    <p className="text-2xl font-extrabold">128</p>
+                    <p className="text-2xl font-extrabold">{stats.studyHours * 10}</p>
                     <p className="text-[10px] text-slate-500 uppercase font-bold">XP</p>
                   </div>
                   <div className="h-8 w-[1px] bg-white/10"></div>
                   <div className="text-center">
-                    <p className="text-2xl font-extrabold">06</p>
+                    <p className="text-2xl font-extrabold">{stats.completedCourses}</p>
                     <p className="text-[10px] text-slate-500 uppercase font-bold">Badges</p>
                   </div>
                 </div>
@@ -713,7 +714,10 @@ export default function NewDashboard() {
                     </div>
                   ))}
                 </div>
-                <button className="w-full mt-6 py-3 bg-white/5 hover:bg-white/10 rounded-xl text-xs font-bold transition-all">
+                <button 
+                  onClick={() => navigate('/calendar')}
+                  className="w-full mt-6 py-3 bg-white/5 hover:bg-white/10 rounded-xl text-xs font-bold transition-all"
+                >
                   View Full Calendar
                 </button>
               </div>
@@ -722,31 +726,80 @@ export default function NewDashboard() {
               <div className="bg-[#192540]/60 rounded-xl p-6 border border-white/10 backdrop-blur-lg">
                 <h4 className="font-bold text-lg mb-4">Achievements</h4>
                 <div className="flex flex-wrap gap-4">
-                  {[
-                    { icon: Award, color: "primary", title: "Early Adopter" },
-                    { icon: Star, color: "secondary", title: "Consistency Master" },
-                    { icon: TrendingIcon, color: "tertiary", title: "Knowledge Luminary" },
-                    { icon: Lock, color: "locked", title: "Locked" },
-                  ].map((badge, i) => (
-                    <div 
-                      key={i} 
-                      className={`w-12 h-12 rounded-full flex items-center justify-center relative group ${
-                        badge.color === "locked" 
-                          ? "bg-[#192540] border border-white/5 opacity-40" 
-                          : `bg-gradient-to-br from-${badge.color === "primary" ? "[#5764f1]/40" : badge.color === "secondary" ? "[#9e41f5]/40" : "[#17a8ec]/40"} to-white/5`
-                      }`}
-                      title={badge.title}
-                    >
-                      <badge.icon className={`w-6 h-6 ${
-                        badge.color === "primary" ? "text-[#9fa7ff]" : 
-                        badge.color === "secondary" ? "text-[#c081ff]" : 
-                        badge.color === "tertiary" ? "text-[#61c2ff]" : "text-slate-400"
-                      }`} />
-                      <div className="absolute -top-10 left-1/2 -translate-x-1/2 px-2 py-1 bg-[#1f2b49] text-[10px] rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap shadow-xl">
-                        {badge.title}
+                  {(() => {
+                    // Generate achievements based on real data
+                    const achievements = [];
+                    
+                    // First Course Achievement
+                    if (stats.totalEnrollments >= 1) {
+                      achievements.push({ icon: Award, color: "primary", title: "First Step", unlocked: true });
+                    } else {
+                      achievements.push({ icon: Lock, color: "locked", title: "Enroll in first course", unlocked: false });
+                    }
+                    
+                    // Consistency Master - 50%+ progress
+                    if (stats.avgProgress >= 50) {
+                      achievements.push({ icon: Star, color: "secondary", title: "Consistency Master", unlocked: true });
+                    } else {
+                      achievements.push({ icon: Lock, color: "locked", title: "Reach 50% progress", unlocked: false });
+                    }
+                    
+                    // Course Completer
+                    if (stats.completedCourses >= 1) {
+                      achievements.push({ icon: TrendingIcon, color: "tertiary", title: "Course Completer", unlocked: true });
+                    } else {
+                      achievements.push({ icon: Lock, color: "locked", title: "Complete a course", unlocked: false });
+                    }
+                    
+                    // Knowledge Seeker - 3+ courses
+                    if (stats.totalEnrollments >= 3) {
+                      achievements.push({ icon: BookOpen, color: "primary", title: "Knowledge Seeker", unlocked: true });
+                    } else {
+                      achievements.push({ icon: Lock, color: "locked", title: "Enroll in 3 courses", unlocked: false });
+                    }
+                    
+                    return achievements.map((badge, i) => (
+                      <div 
+                        key={i} 
+                        className={`w-12 h-12 rounded-full flex items-center justify-center relative group transition-all ${
+                          badge.unlocked 
+                            ? `bg-gradient-to-br ${
+                                badge.color === "primary" ? "from-[#5764f1]/40 to-[#5764f1]/10" : 
+                                badge.color === "secondary" ? "from-[#9e41f5]/40 to-[#9e41f5]/10" : 
+                                "from-[#17a8ec]/40 to-[#17a8ec]/10"
+                              } hover:scale-110` 
+                            : "bg-[#192540] border border-white/5 opacity-40"
+                        }`}
+                        title={badge.title}
+                      >
+                        <badge.icon className={`w-6 h-6 ${
+                          badge.color === "primary" ? "text-[#9fa7ff]" : 
+                          badge.color === "secondary" ? "text-[#c081ff]" : 
+                          badge.color === "tertiary" ? "text-[#61c2ff]" : "text-slate-400"
+                        }`} />
+                        <div className={`absolute -top-10 left-1/2 -translate-x-1/2 px-2 py-1 rounded text-[10px] opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap shadow-xl ${
+                          badge.unlocked ? "bg-[#5764f1] text-white" : "bg-[#1f2b49] text-slate-400"
+                        }`}>
+                          {badge.title}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ));
+                  })()}
+                </div>
+                <div className="mt-4 pt-4 border-t border-white/10">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-slate-400">Unlocked: {(() => {
+                      let count = 0;
+                      if (stats.totalEnrollments >= 1) count++;
+                      if (stats.avgProgress >= 50) count++;
+                      if (stats.completedCourses >= 1) count++;
+                      if (stats.totalEnrollments >= 3) count++;
+                      return count;
+                    })()}/4</span>
+                    <span className="text-[#9fa7ff] font-bold">
+                      {stats.completedCourses >= 1 ? "Master" : stats.avgProgress >= 50 ? "Pro" : stats.totalEnrollments >= 1 ? "Beginner" : "Newcomer"}
+                    </span>
+                  </div>
                 </div>
               </div>
             </aside>

@@ -71,7 +71,10 @@ export default function Sidebar() {
 
       {/* Upgrade Button */}
       <div className="px-6 mb-8">
-        <button className="w-full py-3 px-4 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-bold text-sm shadow-lg shadow-indigo-500/20 active:scale-95 transition-all">
+        <button 
+          onClick={() => navigate('/courses')}
+          className="w-full py-3 px-4 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-bold text-sm shadow-lg shadow-indigo-500/20 active:scale-95 transition-all hover:shadow-xl hover:scale-105"
+        >
           Upgrade Plan
         </button>
       </div>

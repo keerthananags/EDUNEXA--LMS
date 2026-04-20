@@ -3,6 +3,13 @@ const Chat = require('../models/Chat');
 
 const chatWithAI = async (req, res) => {
   try {
+    // Check if Gemini API key is configured
+    if (!process.env.GEMINI_API_KEY) {
+      return res.status(503).json({
+        message: 'AI service not configured. Please set GEMINI_API_KEY in environment variables.'
+      });
+    }
+
     const { message, history = [], courseContext } = req.body;
     const userId = req.user._id;
 

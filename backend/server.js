@@ -31,6 +31,7 @@ const allowedOrigins = [
   "https://edunexa-lms-zx8q.vercel.app",
   "https://edunexa-jef3740zw-keerthananagesh32-8080s-projects.vercel.app",
   "https://lms-7fkk3e9pr-keerthananagesh32-8080s-projects.vercel.app",
+  "https://edunexa-gw5o47oxe-keerthananagesh32-8080s-projects.vercel.app",
 ];
 
 app.use(
@@ -73,6 +74,16 @@ app.get("/", (req, res) => {
   });
 });
 
+// AI Health Check - Verify Gemini API key is configured
+app.get("/api/ai/health", (req, res) => {
+  const geminiKey = process.env.GEMINI_API_KEY;
+  res.json({
+    success: true,
+    aiConfigured: !!geminiKey,
+    message: geminiKey ? "AI service ready" : "GEMINI_API_KEY not set",
+  });
+});
+
 /* ========================
    ROUTES (WITH DEBUG LOGS)
 ======================== */
@@ -109,7 +120,11 @@ const {
 
 const { protect } = require("./middleware/auth");
 
-app.post("/api/enroll/:courseId", protect, enrollCourse);
+app.post("/api/enroll/:courseId", protect, async (req, res) => {
+  // Convert URL param to body format expected by controller
+  req.body = { ...req.body, courseId: req.params.courseId };
+  await enrollCourse(req, res);
+});
 
 /* ========================
    404 HANDLER
