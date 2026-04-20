@@ -22,6 +22,9 @@ const Register = () => {
     setLoading(true);
     setError('');
 
+    console.log('API_BASE_URL:', API_BASE_URL);
+    console.log('Sending registration data:', { name, email, password: '***', role: 'student' });
+
     try {
       // 🔹 Register user
       const response = await fetch(`${API_BASE_URL}/auth/register`, {
@@ -37,6 +40,8 @@ const Register = () => {
         }),
       });
       const data = await response.json();
+      console.log('Response status:', response.status);
+      console.log('Response data:', data);
 
       if (!response.ok) {
         throw new Error(data.message || 'Registration failed');

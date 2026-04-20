@@ -9,17 +9,16 @@ connectDB();
 
 const app = express();
 
-// ✅ CORS (works for Vercel + any frontend)
-app.use(
-  cors({
-    origin: [
-      "http://localhost:5173",
-      "http://localhost:3000",
-      "https://lms-peyj91x4d-keerthananagesh32-8080s-projects.vercel.app"
-    ],
-    credentials: true,
-  })
-);
+// ✅ CORS - Allow all origins
+app.use(cors({
+  origin: '*',
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+}));
+
+// Handle preflight for all routes
+app.options('*', cors());
 
 // Parse JSON bodies
 app.use(express.json());

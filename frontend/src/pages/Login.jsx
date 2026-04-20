@@ -3,9 +3,11 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Mail, Lock, Eye, EyeOff, BookOpen, ArrowRight } from 'lucide-react';
 
-// Production backend URL
+// Production backend URL - FORCE CORRECT URL
 const PROD_API_URL = 'https://edunexa-lms-zx8q.onrender.com/api';
-const API_BASE_URL = import.meta.env.VITE_API_URL || PROD_API_URL;
+const API_BASE_URL = PROD_API_URL; // Force production URL
+
+console.log('Using API_BASE_URL:', API_BASE_URL);
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -27,10 +29,14 @@ const Login = () => {
         throw new Error("API URL not configured");
       }
 
+      // Show message for Render free tier wake-up
+      console.log('Connecting to server... (may take 30-60s if server was sleeping)');
+
       const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
+        signal: AbortSignal.timeout(60000) // 60s timeout for Render wake-up
       });
 
       const text = await response.text(); // safer parsing
