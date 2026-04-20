@@ -14,20 +14,40 @@ const getGenAI = () => {
   return genAI;
 };
 
+// List of models to try in order
+const MODELS_TO_TRY = [
+  'gemini-1.5-flash-latest',
+  'gemini-1.5-pro-latest', 
+  'gemini-1.5-flash',
+  'gemini-1.5-pro',
+  'gemini-pro',
+  'gemini-1.0-pro'
+];
+
 const askGemini = async (prompt) => {
-  try {
-    console.log('🤖 Asking Gemini:', prompt.substring(0, 50) + '...');
-    const genAIInstance = getGenAI();
-    const model = genAIInstance.getGenerativeModel({ model: 'gemini-pro' });
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const text = response.text();
-    console.log('✅ Gemini response received:', text.substring(0, 50) + '...');
-    return text;
-  } catch (error) {
-    console.error('❌ Gemini API Error:', error.message);
-    throw new Error(`AI Service Error: ${error.message}`);
+  const genAIInstance = getGenAI();
+  
+  let lastError = null;
+  
+  for (const modelName of MODELS_TO_TRY) {
+    try {
+      console.log(`🤖 Trying model: ${modelName}`);
+      const model = genAIInstance.getGenerativeModel({ model: modelName });
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      const text = response.text();
+      console.log(`✅ Model ${modelName} worked! Response:`, text.substring(0, 50) + '...');
+      return text;
+    } catch (error) {
+      console.log(`❌ Model ${modelName} failed:`, error.message);
+      lastError = error;
+      // Continue to next model
+    }
   }
+  
+  // All models failed
+  console.error('❌ All Gemini models failed. Last error:', lastError?.message);
+  throw new Error(`AI Service Error: ${lastError?.message || 'All models unavailable'}`);
 };
 
 module.exports = { askGemini };
