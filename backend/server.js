@@ -9,38 +9,62 @@ connectDB();
 
 const app = express();
 
-// ✅ CORS - Allow all origins
-app.use(cors({
-  origin: '*',
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
-}));
+/* ========================
+   CORS CONFIG (FIXED)
+======================== */
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5173",
+      "http://localhost:3000",
+      "https://edunexa-lms-zx8q.vercel.app",
+    ],
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
 
-// Handle preflight for all routes
-app.options('*', cors());
+app.options("*", cors());
 
-// Parse JSON bodies
+/* ========================
+   BODY PARSER
+======================== */
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-// Swagger
+/* ========================
+   SWAGGER
+======================== */
 setupSwagger(app);
 
-// Health check
+/* ========================
+   HEALTH CHECK
+======================== */
 app.get("/", (req, res) => {
   res.json({
-    message: "EduNexa LMS API is running ",
+    success: true,
+    message: "EduNexa LMS API is running 🚀",
   });
 });
 
-// Routes
-app.use("/api/auth", require("./routes/authRoutes"));
-app.use("/api/courses", require("./routes/courseRoutes"));
-app.use("/api/enrollments", require("./routes/enrollmentRoutes"));
-app.use("/api/admin", require("./routes/adminRoutes"));
-app.use("/api/ai", require("./routes/aiRoutes"));
-app.use("/api/quizzes", require("./routes/quizRoutes"));
+/* ========================
+   ROUTES (SAFE LOADING)
+======================== */
+try {
+  app.use("/api/auth", require("./routes/authRoutes"));
+  app.use("/api/courses", require("./routes/courseRoutes"));
+  app.use("/api/enrollments", require("./routes/enrollmentRoutes"));
+  app.use("/api/admin", require("./routes/adminRoutes"));
+  app.use("/api/ai", require("./routes/aiRoutes"));
+  app.use("/api/quizzes", require("./routes/quizRoutes"));
+} catch (err) {
+  console.error("❌ Route loading error:", err.message);
+}
 
+/* ========================
+   EXTRA ROUTES
+======================== */
 const {
   enrollCourse,
   getMyEnrollments,
@@ -51,20 +75,33 @@ const { protect } = require("./middleware/auth");
 app.post("/api/enroll/:courseId", protect, enrollCourse);
 app.get("/api/my-courses", protect, getMyEnrollments);
 
-// 404
+/* ========================
+   404 HANDLER
+======================== */
 app.use((req, res) => {
-  res.status(404).json({ message: "Route Not Found" });
+  res.status(404).json({
+    success: false,
+    message: `Route not found: ${req.originalUrl}`,
+  });
 });
 
-// Error handler
+/* ========================
+   ERROR HANDLER
+======================== */
 app.use((err, req, res, next) => {
-  console.error(err.message);
-  res.status(500).json({ message: err.message });
+  console.error("❌ Server Error:", err);
+
+  res.status(500).json({
+    success: false,
+    message: err.message || "Internal Server Error",
+  });
 });
 
-// Server
+/* ========================
+   START SERVER
+======================== */
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, "0.0.0.0", () => {
-  console.log(`🚀 Server running on ${PORT}`);
-}); 
+  console.log(`🚀 Server running on port ${PORT}`);
+});
