@@ -27,7 +27,18 @@ async function fetchWithAuth(url, options = {}) {
     if (!response.ok) {
       const text = await response.text();
       console.error("API ERROR:", text);
-      throw new Error(`HTTP ${response.status}`);
+      
+      // Try to parse error message from backend
+      let errorMessage = `HTTP ${response.status}`;
+      try {
+        const errorData = JSON.parse(text);
+        errorMessage = errorData.message || errorData.error || errorMessage;
+      } catch (e) {
+        // If can't parse JSON, use text
+        errorMessage = text || errorMessage;
+      }
+      
+      throw new Error(errorMessage);
     }
 
     return await response.json();

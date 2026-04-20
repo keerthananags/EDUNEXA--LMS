@@ -1,63 +1,59 @@
-const { GoogleGenerativeAI } = require('@google/generative-ai');
+const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 let genAI = null;
 
 const getGenAI = () => {
   if (!genAI) {
     const apiKey = process.env.GEMINI_API_KEY;
-
-    console.log('🔑 GEMINI_API_KEY exists:', !!apiKey);
-
     if (!apiKey) {
-      throw new Error('GEMINI_API_KEY not set in environment');
+      throw new Error("GEMINI_API_KEY not set in environment");
     }
-
+    console.log("🔑 GEMINI_API_KEY configured");
     genAI = new GoogleGenerativeAI(apiKey);
   }
-
   return genAI;
 };
 
-// ✅ Only supported models (cleaned)
-const MODELS_TO_TRY = [
-  'gemini-1.5-flash',
-  'gemini-1.5-pro',
-  'gemini-1.5-flash-latest',
-  'gemini-1.5-pro-latest'
+// CORRECT model names that actually work with Google AI API
+const WORKING_MODELS = [
+  "gemini-1.5-flash-001",      // Stable version
+  "gemini-1.5-pro-001",        // Stable version
+  "gemini-1.0-pro-001",        // Legacy stable
+  "gemini-1.5-flash-002",      // Latest stable
+  "gemini-1.5-pro-002",        // Latest stable
 ];
 
 const askGemini = async (prompt) => {
-  const genAIInstance = getGenAI();
-
+  const ai = getGenAI();
   let lastError = null;
 
-  for (const modelName of MODELS_TO_TRY) {
-    try {
-      console.log(`🤖 Trying model: ${modelName}`);
+  console.log("🤖 Processing prompt:", prompt.substring(0, 60) + "...");
 
-      const model = genAIInstance.getGenerativeModel({
-        model: modelName,
+  // Try each model until one works
+  for (const modelName of WORKING_MODELS) {
+    try {
+      console.log(`  → Trying ${modelName}...`);
+      const model = ai.getGenerativeModel({ model: modelName });
+
+      const result = await model.generateContent({
+        contents: [{ role: "user", parts: [{ text: prompt }] }],
       });
 
-      const result = await model.generateContent(prompt);
       const response = await result.response;
-
       const text = response.text();
 
-      console.log(`✅ Success with model: ${modelName}`);
-
-      return text; // ✅ STOP here on success
+      console.log(`  ✅ ${modelName} WORKED!`);
+      return text;
     } catch (err) {
-      console.log(`❌ Model failed: ${modelName} ->`, err.message);
+      console.log(`  ❌ ${modelName} failed:`, err.message);
       lastError = err;
+      continue; // Try next model
     }
   }
 
-  console.error('❌ All Gemini models failed:', lastError?.message);
-
-  throw new Error(
-    `AI Service Error: ${lastError?.message || 'All models unavailable'}`
-  );
+  // All models failed
+  console.error("❌ ALL MODELS FAILED");
+  throw new Error(`AI Error: ${lastError?.message || "No models available"}`);
 };
 
 module.exports = { askGemini };

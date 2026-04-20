@@ -74,16 +74,21 @@ export default function AIChat({ courseTitle, courseContent }) {
       setMessages(prev => [...prev, { role: 'assistant', content: res.response }]);
     } catch (err) {
       console.error('Chat error:', err);
-      let errorMessage = 'Sorry, I am having trouble responding right now. Please try again!';
       
-      if (err.message?.includes('401') || err.message?.includes('403')) {
+      // Use backend error message directly if available
+      let errorMessage = err.message || 'Sorry, I am having trouble responding right now. Please try again!';
+      
+      // Simplify common errors for users
+      if (errorMessage?.includes('401') || errorMessage?.includes('403')) {
         errorMessage = 'Please login to use the AI chat feature.';
-      } else if (err.message?.includes('404')) {
-        errorMessage = 'AI service not available. Please try again later.';
-      } else if (err.message?.includes('500')) {
-        errorMessage = 'AI service error. Please check if Gemini API key is configured correctly.';
-      } else if (err.name === 'TypeError' || err.message?.includes('fetch')) {
-        errorMessage = 'Cannot connect to server. Please make sure the backend is running on port 5000.';
+      } else if (errorMessage?.includes('404')) {
+        errorMessage = 'AI service endpoint not found.';
+      } else if (errorMessage?.includes('GEMINI_API_KEY')) {
+        errorMessage = 'AI service not configured. Admin needs to set GEMINI_API_KEY.';
+      } else if (errorMessage?.includes('Unable to connect')) {
+        errorMessage = 'Cannot connect to server. Backend may be offline.';
+      } else if (errorMessage?.includes('models') && errorMessage?.includes('not found')) {
+        errorMessage = 'AI model error. Trying fallback models... (will auto-retry)';
       }
       
       setMessages(prev => [...prev, { 
