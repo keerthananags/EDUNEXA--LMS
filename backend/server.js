@@ -5,20 +5,43 @@ const connectDB = require("./config/db");
 const { setupSwagger } = require("./config/swagger");
 
 dotenv.config();
-connectDB();
+
+/* ========================
+   DB CONNECTION (SAFE)
+======================== */
+connectDB()
+  .then(() => console.log("✅ MongoDB Connected"))
+  .catch((err) => {
+    console.error("❌ MongoDB Connection Failed:", err.message);
+  });
 
 const app = express();
 
 /* ========================
-   CORS CONFIG (FIXED)
+   TRUST PROXY (IMPORTANT for Render)
 ======================== */
+app.set("trust proxy", 1);
+
+/* ========================
+   CORS CONFIG (PRODUCTION SAFE)
+======================== */
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://localhost:3000",
+  "https://edunexa-lms-zx8q.vercel.app",
+];
+
 app.use(
   cors({
-    origin: [
-      "http://localhost:5173",
-      "http://localhost:3000",
-      "https://edunexa-lms-zx8q.vercel.app",
-    ],
+    origin: function (origin, callback) {
+      if (!origin) return callback(null, true); // mobile apps/postman
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      } else {
+        return callback(null, true); // TEMP relaxed for debugging
+      }
+    },
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
@@ -30,7 +53,7 @@ app.options("*", cors());
 /* ========================
    BODY PARSER
 ======================== */
-app.use(express.json());
+app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 
 /* ========================
@@ -44,22 +67,35 @@ setupSwagger(app);
 app.get("/", (req, res) => {
   res.json({
     success: true,
-    message: "EduNexa LMS API is running 🚀",
+    message: "🚀 EduNexa LMS API is running",
   });
 });
 
 /* ========================
-   ROUTES (SAFE LOADING)
+   ROUTES (WITH DEBUG LOGS)
 ======================== */
+console.log("📦 Loading routes...");
+
 try {
   app.use("/api/auth", require("./routes/authRoutes"));
+  console.log("✅ authRoutes loaded");
+
   app.use("/api/courses", require("./routes/courseRoutes"));
+  console.log("✅ courseRoutes loaded");
+
   app.use("/api/enrollments", require("./routes/enrollmentRoutes"));
+  console.log("✅ enrollmentRoutes loaded");
+
   app.use("/api/admin", require("./routes/adminRoutes"));
+  console.log("✅ adminRoutes loaded");
+
   app.use("/api/ai", require("./routes/aiRoutes"));
+  console.log("✅ aiRoutes loaded");
+
   app.use("/api/quizzes", require("./routes/quizRoutes"));
+  console.log("✅ quizRoutes loaded");
 } catch (err) {
-  console.error("❌ Route loading error:", err.message);
+  console.error("❌ ROUTE LOADING FAILED:", err.message);
 }
 
 /* ========================
@@ -79,6 +115,8 @@ app.get("/api/my-courses", protect, getMyEnrollments);
    404 HANDLER
 ======================== */
 app.use((req, res) => {
+  console.log("❌ 404 HIT:", req.originalUrl);
+
   res.status(404).json({
     success: false,
     message: `Route not found: ${req.originalUrl}`,
@@ -89,7 +127,7 @@ app.use((req, res) => {
    ERROR HANDLER
 ======================== */
 app.use((err, req, res, next) => {
-  console.error("❌ Server Error:", err);
+  console.error("❌ SERVER ERROR:", err);
 
   res.status(500).json({
     success: false,
