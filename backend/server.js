@@ -29,6 +29,8 @@ const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:3000",
   "https://edunexa-lms-zx8q.vercel.app",
+  "https://edunexa-jef3740zw-keerthananagesh32-8080s-projects.vercel.app",
+  "https://lms-7fkk3e9pr-keerthananagesh32-8080s-projects.vercel.app",
 ];
 
 app.use(

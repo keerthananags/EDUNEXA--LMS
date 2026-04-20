@@ -19,9 +19,11 @@ import {
   Loader2
 } from 'lucide-react';
 
-// Production backend URL
+// Production backend URL - FORCE CORRECT URL
 const PROD_API_URL = 'https://edunexa-lms-zx8q.onrender.com/api';
-const API_BASE_URL = import.meta.env.VITE_API_URL || PROD_API_URL;
+const API_BASE_URL = PROD_API_URL; // Force production URL
+
+console.log('Courses using URL:', API_BASE_URL);
 
 export default function Courses() {
   const navigate = useNavigate();

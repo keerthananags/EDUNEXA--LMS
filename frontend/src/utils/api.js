@@ -1,13 +1,8 @@
-// Production backend URL (Render)
+// Production backend URL - FORCE CORRECT URL
 const PROD_API_URL = 'https://edunexa-lms-zx8q.onrender.com/api';
+const API_BASE_URL = PROD_API_URL; // Force production URL
 
-// Use env var in development, production URL in production
-const API_BASE_URL = import.meta.env.VITE_API_URL || PROD_API_URL;
-
-// ❗ Safety check
-if (!API_BASE_URL) {
-  throw new Error("VITE_API_URL not set in .env");
-}
+console.log('API using URL:', API_BASE_URL);
 
 // Get token
 const getToken = () => localStorage.getItem("token");

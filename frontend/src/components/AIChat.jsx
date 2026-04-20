@@ -3,6 +3,9 @@ import { MessageCircle, X, Send, Sparkles, Bot, User } from 'lucide-react';
 import { aiAPI } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 
+// Production backend URL - FORCE CORRECT URL
+const API_BASE_URL = 'https://edunexa-lms-zx8q.onrender.com/api';
+
 export default function AIChat({ courseTitle, courseContent }) {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([
@@ -41,9 +44,7 @@ export default function AIChat({ courseTitle, courseContent }) {
         return;
       }
 
-      // Test if backend is reachable first
-      const PROD_API_URL = 'https://edunexa-lms-zx8q.onrender.com/api';
-      const API_BASE_URL = import.meta.env.VITE_API_URL || PROD_API_URL;
+      // Use forced production URL
 
       try {
         const healthCheck = await fetch(`${API_BASE_URL.replace('/api', '')}/`, { 
