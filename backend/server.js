@@ -99,17 +99,15 @@ try {
 }
 
 /* ========================
-   EXTRA ROUTES
+   EXTRA ROUTES (Legacy compatibility)
 ======================== */
 const {
   enrollCourse,
-  getMyEnrollments,
 } = require("./controllers/enrollmentController");
 
 const { protect } = require("./middleware/auth");
 
 app.post("/api/enroll/:courseId", protect, enrollCourse);
-app.get("/api/my-courses", protect, getMyEnrollments);
 
 /* ========================
    404 HANDLER

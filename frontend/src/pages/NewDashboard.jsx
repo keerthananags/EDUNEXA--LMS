@@ -67,7 +67,7 @@ export default function NewDashboard() {
       }
 
       // Fetch my enrolled courses
-      const myCoursesRes = await fetch(`${API_BASE_URL}/my-courses`, {
+      const myCoursesRes = await fetch(`${API_BASE_URL}/enrollments/my-enrollments`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       

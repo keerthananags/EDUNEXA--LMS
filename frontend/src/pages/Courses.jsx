@@ -119,7 +119,7 @@ const response = await fetch(`${API_BASE_URL}/courses`, {
       console.log('Fetching my enrollments...');
       
       // 🔹 Fetch my courses
-const response = await fetch(`${API_BASE_URL}/my-courses`, {
+const response = await fetch(`${API_BASE_URL}/enrollments/my-enrollments`, {
   method: "GET",
   headers: {
     "Content-Type": "application/json",
