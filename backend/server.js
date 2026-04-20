@@ -75,13 +75,36 @@ app.get("/", (req, res) => {
 });
 
 // AI Health Check - Verify Gemini API key is configured
-app.get("/api/ai/health", (req, res) => {
+app.get("/api/ai/health", async (req, res) => {
   const geminiKey = process.env.GEMINI_API_KEY;
-  res.json({
-    success: true,
-    aiConfigured: !!geminiKey,
-    message: geminiKey ? "AI service ready" : "GEMINI_API_KEY not set",
-  });
+  
+  if (!geminiKey) {
+    return res.status(503).json({
+      success: false,
+      aiConfigured: false,
+      message: "GEMINI_API_KEY not set in environment",
+    });
+  }
+  
+  // Test actual API call
+  try {
+    const { askGemini } = require("./service/geminiService");
+    const testResponse = await askGemini("Say 'AI is working' in 3 words");
+    res.json({
+      success: true,
+      aiConfigured: true,
+      message: "AI service ready",
+      testResponse: testResponse.substring(0, 50),
+    });
+  } catch (error) {
+    res.status(503).json({
+      success: false,
+      aiConfigured: true,
+      apiWorking: false,
+      message: "GEMINI_API_KEY set but API call failed",
+      error: error.message,
+    });
+  }
 });
 
 /* ========================
