@@ -18,6 +18,16 @@ body {
   color: var(--color-dark-text);
   margin: 0;
   -webkit-font-smoothing: antialiased;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.dark body {
+  background-color: #060e20;
+  color: #f1f5f9;
+}
+
+.dark main {
+  background-color: #060e20;
 }
 
 .glass-card {
@@ -26,6 +36,12 @@ body {
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(255, 255, 255, 0.5);
   box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
+}
+
+.dark .glass-card {
+  background: rgba(30, 41, 59, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
 }
 
 /* Playful floating animations */

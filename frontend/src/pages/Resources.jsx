@@ -26,21 +26,21 @@ export default function Resources() {
 
   const getTypeColor = (type) => {
     switch (type) {
-      case 'pdf': return 'bg-red-100 text-red-700';
-      case 'video': return 'bg-purple-100 text-purple-700';
-      case 'code': return 'bg-green-100 text-green-700';
-      case 'folder': return 'bg-blue-100 text-blue-700';
-      default: return 'bg-gray-100 text-gray-700';
+      case 'pdf': return 'bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400';
+      case 'video': return 'bg-purple-100 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400';
+      case 'code': return 'bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400';
+      case 'folder': return 'bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400';
+      default: return 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-400';
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#060e20] p-8 transition-colors duration-200">
       <div className="max-w-6xl mx-auto">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">Resources</h1>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-8">Resources</h1>
 
         {/* Search and Filter */}
-        <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
+        <div className="bg-white dark:bg-[#091328] rounded-2xl shadow-lg p-6 mb-8 border border-gray-200 dark:border-white/5 transition-colors duration-200">
           <div className="flex gap-4 mb-4">
             <div className="flex-1 relative">
               <Search className="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -49,7 +49,7 @@ export default function Resources() {
                 placeholder="Search resources..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-12 pr-4 py-3 bg-gray-50 dark:bg-[#1a2544] border border-gray-300 dark:border-white/10 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-white outline-none"
               />
             </div>
             <div className="flex items-center gap-2">
@@ -57,7 +57,7 @@ export default function Resources() {
               <select
                 value={filterType}
                 onChange={(e) => setFilterType(e.target.value)}
-                className="px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500"
+                className="px-4 py-3 bg-gray-50 dark:bg-[#1a2544] border border-gray-300 dark:border-white/10 rounded-xl focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white outline-none"
               >
                 <option value="all">All Types</option>
                 <option value="pdf">PDF</option>
@@ -73,7 +73,7 @@ export default function Resources() {
             {categories.map((category) => (
               <button
                 key={category}
-                className="px-4 py-2 rounded-full text-sm font-medium bg-gray-100 text-gray-700 hover:bg-blue-100 hover:text-blue-700 transition"
+                className="px-4 py-2 rounded-full text-sm font-medium bg-gray-100 dark:bg-[#1a2544] text-gray-700 dark:text-gray-300 hover:bg-blue-100 dark:hover:bg-blue-900/20 hover:text-blue-700 dark:hover:text-blue-400 transition"
               >
                 {category}
               </button>
@@ -84,19 +84,19 @@ export default function Resources() {
         {/* Resources Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredResources.map((resource) => (
-            <div key={resource.id} className="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition">
+            <div key={resource.id} className="bg-white dark:bg-[#091328] rounded-2xl shadow-lg p-6 border border-gray-200 dark:border-white/5 hover:shadow-xl transition transition-colors duration-200">
               <div className="flex items-start gap-4 mb-4">
                 <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${getTypeColor(resource.type)}`}>
                   <resource.icon className="w-6 h-6" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-semibold text-gray-900 mb-1">{resource.title}</h3>
-                  <p className="text-sm text-gray-500">{resource.category}</p>
+                  <h3 className="font-semibold text-gray-900 dark:text-white mb-1">{resource.title}</h3>
+                  <p className="text-gray-600 dark:text-slate-400 text-sm mb-4">{resource.description}</p>
                 </div>
               </div>
 
-              <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
-                <span className={`px-2 py-1 rounded ${getTypeColor(resource.type)}`}>
+              <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400 mb-4">
+                <span className={`px-2 py-1 rounded text-xs font-bold ${getTypeColor(resource.type)}`}>
                   {resource.type.toUpperCase()}
                 </span>
                 <span>{resource.size}</span>

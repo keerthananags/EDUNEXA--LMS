@@ -114,6 +114,10 @@ const courseSchema = new mongoose.Schema({
     type: String,
     default: '',
   },
+  aiSummary: {
+    type: String,
+    default: '',
+  },
 }, {
   timestamps: true,
 });

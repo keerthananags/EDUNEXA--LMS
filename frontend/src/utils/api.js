@@ -1,6 +1,13 @@
-// Production backend URL - FORCE CORRECT URL
-const PROD_API_URL = 'https://edunexa-lms-zx8q.onrender.com/api';
-const API_BASE_URL = PROD_API_URL; // Force production URL
+// API URL configuration
+const isDevelopment = window.location.hostname === 'localhost' || 
+                      window.location.hostname === '127.0.0.1' || 
+                      window.location.port === '5173' || 
+                      window.location.port === '3000';
+const ENV_API_URL = import.meta.env.VITE_API_URL;
+const LOCAL_API_URL = 'http://localhost:5000/api';
+
+// ALWAYS prefer local API when running on localhost to prevent hitting expired prod servers
+export const API_BASE_URL = isDevelopment ? LOCAL_API_URL : (ENV_API_URL || '');
 
 console.log('API using URL:', API_BASE_URL);
 
@@ -38,12 +45,18 @@ async function fetchWithAuth(url, options = {}) {
         errorMessage = text || errorMessage;
       }
       
-      throw new Error(errorMessage);
+      // Throw formatted error and flag it
+      const err = new Error(errorMessage);
+      err.isApiError = true;
+      throw err;
     }
 
     return await response.json();
   } catch (error) {
     console.error("FETCH ERROR:", error.message);
+    if (error.isApiError) {
+      throw error;
+    }
     throw new Error("Unable to connect to server");
   }
 }

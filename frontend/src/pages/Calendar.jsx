@@ -60,7 +60,7 @@ export default function Calendar() {
     const dayKey = day.toString();
     setEvents(prev => ({
       ...prev,
-      [dayKey]: prev[dayKey].filter((_, i) => i !== index)
+      [dayKey]: (prev[dayKey] || []).filter((_, i) => i !== index)
     }));
   };
 
@@ -73,26 +73,26 @@ export default function Calendar() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#060e20] p-8 transition-colors duration-200">
       <div className="max-w-6xl mx-auto">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Calendar</h1>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Calendar</h1>
           <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition">
             <Plus className="w-5 h-5" />
             Add Event
           </button>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+        <div className="bg-white dark:bg-[#091328] rounded-2xl shadow-lg overflow-hidden border border-gray-200 dark:border-white/5 transition-colors duration-200">
           {/* Calendar Header */}
-          <div className="flex items-center justify-between p-6 border-b">
-            <button onClick={prevMonth} className="p-2 hover:bg-gray-100 rounded-lg transition">
+          <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-white/5">
+            <button onClick={prevMonth} className="p-2 hover:bg-gray-100 dark:hover:bg-white/5 rounded-lg transition text-gray-600 dark:text-gray-400">
               <ChevronLeft className="w-5 h-5" />
             </button>
-            <h2 className="text-xl font-semibold text-gray-900">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
               {months[currentDate.getMonth()]} {currentDate.getFullYear()}
             </h2>
-            <button onClick={nextMonth} className="p-2 hover:bg-gray-100 rounded-lg transition">
+            <button onClick={nextMonth} className="p-2 hover:bg-gray-100 dark:hover:bg-white/5 rounded-lg transition text-gray-600 dark:text-gray-400">
               <ChevronRight className="w-5 h-5" />
             </button>
           </div>
@@ -101,7 +101,7 @@ export default function Calendar() {
           <div className="p-6">
             <div className="grid grid-cols-7 gap-4 mb-4">
               {days.map((day) => (
-                <div key={day} className="text-center font-semibold text-gray-600 text-sm">
+                <div key={day} className="text-center font-semibold text-gray-600 dark:text-gray-400 text-sm">
                   {day}
                 </div>
               ))}
@@ -118,18 +118,18 @@ export default function Calendar() {
                   <div
                     key={day}
                     onClick={() => handleDayClick(day)}
-                    className={`h-24 p-2 border rounded-lg hover:bg-blue-50 cursor-pointer transition overflow-y-auto ${
-                      hasEvents ? 'border-blue-200 bg-blue-50' : 'border-gray-200'
+                    className={`h-24 p-2 border rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 cursor-pointer transition overflow-y-auto ${
+                      hasEvents ? 'border-blue-200 dark:border-blue-800/50 bg-blue-50 dark:bg-blue-900/10' : 'border-gray-200 dark:border-white/5'
                     }`}
                   >
-                    <span className="text-sm font-medium text-gray-700">{day}</span>
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{day}</span>
                     <div className="mt-1 space-y-1">
                       {dayEvents.slice(0, 2).map((event, idx) => (
                         <div key={idx} className={`text-[10px] px-1 py-0.5 rounded truncate ${
-                          event.type === 'exam' ? 'bg-red-100 text-red-700' :
-                          event.type === 'deadline' ? 'bg-yellow-100 text-yellow-700' :
-                          event.type === 'session' ? 'bg-green-100 text-green-700' :
-                          'bg-purple-100 text-purple-700'
+                          event.type === 'exam' ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400' :
+                          event.type === 'deadline' ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400' :
+                          event.type === 'session' ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' :
+                          'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400'
                         }`}>
                           {event.title}
                         </div>
@@ -147,19 +147,19 @@ export default function Calendar() {
 
         {/* Upcoming Events */}
         <div className="mt-8">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">Upcoming Events</h2>
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Upcoming Events</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {Object.entries(events).flatMap(([day, dayEvents]) => 
               dayEvents.map((event, idx) => (
-                <div key={`${day}-${idx}`} className="bg-white p-4 rounded-xl shadow-sm border-l-4 border-blue-600 flex justify-between items-start">
+                <div key={`${day}-${idx}`} className="bg-white dark:bg-[#091328] p-4 rounded-xl shadow-sm border-l-4 border-blue-600 dark:border-blue-500 flex justify-between items-start border border-gray-100 dark:border-white/5 transition-colors duration-200">
                   <div>
-                    <p className="font-semibold text-gray-900">{event.title}</p>
-                    <p className="text-sm text-gray-500">{months[currentDate.getMonth()]} {day}, {currentDate.getFullYear()}</p>
+                    <p className="font-semibold text-gray-900 dark:text-white">{event.title}</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">{months[currentDate.getMonth()]} {day}, {currentDate.getFullYear()}</p>
                     <span className={`inline-block mt-2 text-xs px-2 py-1 rounded ${
-                      event.type === 'exam' ? 'bg-red-100 text-red-700' :
-                      event.type === 'deadline' ? 'bg-yellow-100 text-yellow-700' :
-                      event.type === 'session' ? 'bg-green-100 text-green-700' :
-                      'bg-purple-100 text-purple-700'
+                      event.type === 'exam' ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400' :
+                      event.type === 'deadline' ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400' :
+                      event.type === 'session' ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' :
+                      'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400'
                     }`}>
                       {event.type}
                     </span>
@@ -179,10 +179,10 @@ export default function Calendar() {
 
       {/* Add Event Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-md mx-4">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-[#091328] rounded-2xl p-6 w-full max-w-md mx-4 border border-gray-200 dark:border-white/10 shadow-2xl transition-colors duration-200">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-bold text-gray-900">
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white">
                 Add Event - {months[currentDate.getMonth()]} {selectedDay}
               </h3>
               <button 
@@ -195,22 +195,22 @@ export default function Calendar() {
             
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Event Title</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Event Title</label>
                 <input
                   type="text"
                   value={newEvent.title}
                   onChange={(e) => setNewEvent(prev => ({ ...prev, title: e.target.value }))}
                   placeholder="Enter event title..."
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  className="w-full px-4 py-2 bg-gray-50 dark:bg-[#1a2544] border border-gray-300 dark:border-white/10 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none dark:text-white"
                 />
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Event Type</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Event Type</label>
                 <select
                   value={newEvent.type}
                   onChange={(e) => setNewEvent(prev => ({ ...prev, type: e.target.value }))}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  className="w-full px-4 py-2 bg-gray-50 dark:bg-[#1a2544] border border-gray-300 dark:border-white/10 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none dark:text-white"
                 >
                   <option value="session">Live Session</option>
                   <option value="exam">Exam/Quiz</option>
@@ -222,7 +222,7 @@ export default function Calendar() {
               <div className="flex gap-3 pt-4">
                 <button
                   onClick={() => setShowModal(false)}
-                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition"
+                  className="flex-1 px-4 py-2 border border-gray-300 dark:border-white/10 text-gray-700 dark:text-gray-300 rounded-lg font-medium hover:bg-gray-50 dark:hover:bg-white/5 transition"
                 >
                   Cancel
                 </button>

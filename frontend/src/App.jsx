@@ -113,14 +113,14 @@ function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#060e20] flex items-center justify-center p-4 transition-colors duration-200">
+      <div className="bg-white dark:bg-[#091328] rounded-3xl shadow-2xl w-full max-w-md p-8 border border-gray-200 dark:border-white/5">
         <div className="text-center mb-8">
           <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
             <User className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">Create Account</h1>
-          <p className="text-gray-500 mt-1">Start your learning journey today</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Create Account</h1>
+          <p className="text-gray-500 dark:text-gray-400 mt-1">Start your learning journey today</p>
         </div>
 
         {error && (
@@ -131,7 +131,7 @@ function RegisterPage() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Full Name</label>
             <div className="relative">
               <User className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
               <input
@@ -263,25 +263,25 @@ function DashboardPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#060e20] transition-colors duration-200">
       <DashboardNav />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Welcome Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Welcome back, {user?.name}! 👋</h1>
-          <p className="text-gray-500 mt-2">Here's what's happening with your learning journey</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Welcome back, {user?.name}! 👋</h1>
+          <p className="text-gray-500 dark:text-gray-400 mt-2">Here's what's happening with your learning journey</p>
         </div>
 
         {/* Stats Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
           {stats.map((stat, index) => (
-            <div key={index} className="bg-white rounded-2xl p-6 shadow-sm">
+            <div key={index} className="bg-white dark:bg-[#091328] rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-white/5">
               <div className={`w-12 h-12 ${stat.color} rounded-xl flex items-center justify-center mb-4`}>
                 <stat.icon className="w-6 h-6 text-white" />
               </div>
-              <p className="text-3xl font-bold text-gray-900">{stat.value}</p>
-              <p className="text-gray-500">{stat.label}</p>
+              <p className="text-3xl font-bold text-gray-900 dark:text-white">{stat.value}</p>
+              <p className="text-gray-500 dark:text-gray-400">{stat.label}</p>
             </div>
           ))}
         </div>
@@ -453,14 +453,14 @@ function CoursesPage() {
   const levels = ["all", "Beginner", "Intermediate", "Advanced"];
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#060e20] transition-colors duration-200">
       <DashboardNav />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Page Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Explore Courses</h1>
-          <p className="text-gray-500 mt-2">Discover new skills and expand your knowledge</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Explore Courses</h1>
+          <p className="text-gray-500 dark:text-gray-400 mt-2">Discover new skills and expand your knowledge</p>
         </div>
 
         {/* Search and Filters */}
@@ -594,7 +594,7 @@ function LandingNav() {
   const [isOpen, setIsOpen] = React.useState(false);
 
   return (
-    <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100">
+    <nav className="sticky top-0 z-50 bg-white/80 dark:bg-[#060e20]/80 backdrop-blur-md border-b border-gray-100 dark:border-white/5 transition-colors duration-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <Link to="/" className="flex items-center space-x-2">
@@ -607,10 +607,10 @@ function LandingNav() {
           </Link>
 
           <div className="hidden md:flex items-center space-x-8">
-            <Link to="/" className="text-gray-600 hover:text-blue-600 font-medium">Home</Link>
-            <a href="#courses" className="text-gray-600 hover:text-blue-600 font-medium">Courses</a>
-            <a href="#testimonials" className="text-gray-600 hover:text-blue-600 font-medium">Testimonials</a>
-            <a href="#" className="text-gray-600 hover:text-blue-600 font-medium">Pricing</a>
+            <Link to="/" className="text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium">Home</Link>
+            <a href="#courses" className="text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium">Courses</a>
+            <a href="#testimonials" className="text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium">Testimonials</a>
+            <a href="#" className="text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium">Pricing</a>
           </div>
 
           <div className="hidden md:flex items-center space-x-4">
@@ -650,10 +650,10 @@ function LandingNav() {
 
 function Hero() {
   return (
-    <section className="relative min-h-[90vh] bg-gradient-to-br from-slate-50 via-white to-blue-50 overflow-hidden">
+    <section className="relative min-h-[90vh] bg-gradient-to-br from-slate-50 via-white to-blue-50 dark:from-[#060e20] dark:via-[#091328] dark:to-[#060e20] overflow-hidden transition-colors duration-200">
       {/* Background decorative elements */}
-      <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-gradient-to-br from-blue-200/30 to-purple-200/30 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4" />
-      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-gradient-to-tr from-cyan-200/20 to-blue-200/20 rounded-full blur-3xl translate-y-1/4 -translate-x-1/4" />
+      <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-gradient-to-br from-blue-200/30 to-purple-200/30 dark:from-blue-500/10 dark:to-purple-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4" />
+      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-gradient-to-tr from-cyan-200/20 to-blue-200/20 dark:from-cyan-500/10 dark:to-blue-500/10 rounded-full blur-3xl translate-y-1/4 -translate-x-1/4" />
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-16">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
@@ -664,15 +664,15 @@ function Hero() {
               #1 E-Learning Platform for 2026
             </div>
 
-            <h1 className="text-5xl lg:text-6xl xl:text-7xl font-bold text-gray-900 leading-[1.1] mb-6">
+            <h1 className="text-5xl lg:text-6xl xl:text-7xl font-bold text-gray-900 dark:text-white leading-[1.1] mb-6">
               Unlock Your{" "}
-              <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400 bg-clip-text text-transparent">
                 Potential
               </span>{" "}
               With Online Learning
             </h1>
 
-            <p className="text-xl text-gray-600 mb-8 max-w-lg leading-relaxed">
+            <p className="text-xl text-gray-600 dark:text-gray-400 mb-8 max-w-lg leading-relaxed">
               Discover expert-led courses in design, development, and business. Learn at your own pace and earn recognized certificates.
             </p>
 

@@ -245,14 +245,14 @@ const response = await fetch(`${API_BASE_URL}/enroll/${courseId}`, {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#060e20] transition-colors duration-200">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200">
+      <div className="bg-white dark:bg-[#091328] border-b border-gray-200 dark:border-white/5 transition-colors duration-200">
         <div className="max-w-7xl mx-auto px-8 py-6">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Explore Courses</h1>
-              <p className="text-gray-500 mt-1">Discover your next learning adventure</p>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Explore Courses</h1>
+              <p className="text-gray-500 dark:text-gray-400 mt-1">Discover your next learning adventure</p>
             </div>
             {/* Badges removed */}
           </div>
@@ -265,47 +265,47 @@ const response = await fetch(`${API_BASE_URL}/enroll/${courseId}`, {
                 className={`px-6 py-3 rounded-xl font-medium transition flex items-center gap-2 ${
                   activeTab === 'my-courses'
                     ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20'
-                    : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
+                    : 'bg-white dark:bg-[#1a2544] text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#23315a] border border-gray-200 dark:border-white/5'
                 }`}
               >
                 <BookOpen className="w-5 h-5" />
                 My Courses
-                <span className="px-2 py-0.5 bg-white/20 rounded-full text-xs">{myCourses.length}</span>
+                <span className="px-2 py-0.5 bg-white/20 dark:bg-black/20 rounded-full text-xs">{myCourses.length}</span>
               </button>
               <button
                 onClick={() => setActiveTab('all-courses')}
                 className={`px-6 py-3 rounded-xl font-medium transition flex items-center gap-2 ${
                   activeTab === 'all-courses'
                     ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20'
-                    : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
+                    : 'bg-white dark:bg-[#1a2544] text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#23315a] border border-gray-200 dark:border-white/5'
                 }`}
               >
                 <TrendingUp className="w-5 h-5" />
                 All Courses
-                <span className="px-2 py-0.5 bg-white/20 rounded-full text-xs">{allCourses.length}</span>
+                <span className="px-2 py-0.5 bg-white/20 dark:bg-black/20 rounded-full text-xs">{allCourses.length}</span>
               </button>
             </div>
 
             <div className="flex gap-3">
               <div className="relative">
-                <Search className="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                <Search className="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-slate-500" />
                 <input
                   type="text"
                   placeholder="Search courses..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-12 pr-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent w-64"
+                  className="pl-12 pr-4 py-3 bg-white dark:bg-[#1a2544] border border-gray-200 dark:border-white/5 rounded-xl focus:ring-2 focus:ring-blue-500 dark:text-white focus:border-transparent w-64"
                 />
               </div>
               <div className="relative">
                 <select
                   value={selectedCategory}
                   onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="pl-4 pr-10 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none cursor-pointer"
+                  className="pl-4 pr-10 py-3 bg-white dark:bg-[#1a2544] border border-gray-200 dark:border-white/5 rounded-xl focus:ring-2 focus:ring-blue-500 dark:text-white focus:border-transparent appearance-none cursor-pointer"
                 >
                   {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
                 </select>
-                <ChevronDown className="w-5 h-5 absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                <ChevronDown className="w-5 h-5 absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-slate-500 pointer-events-none" />
               </div>
             </div>
           </div>
@@ -361,7 +361,7 @@ const response = await fetch(`${API_BASE_URL}/enroll/${courseId}`, {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredMyCourses.map((course) => (
-                  <div key={course.id} className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 group">
+                  <div key={course.id} className="bg-white dark:bg-[#091328] rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 group border border-gray-100 dark:border-white/5">
                     <div className="relative">
                       <img src={course.image} alt={course.title} className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300" />
                       <div className="absolute top-3 left-3 flex gap-2">
@@ -385,8 +385,8 @@ const response = await fetch(`${API_BASE_URL}/enroll/${courseId}`, {
                       </div>
                     </div>
                     <div className="p-6">
-                      <h3 className="font-bold text-lg text-gray-900 mb-2">{course.title}</h3>
-                      <p className="text-sm text-gray-500 mb-4">{course.instructor}</p>
+                      <h3 className="font-bold text-lg text-gray-900 dark:text-white mb-2">{course.title}</h3>
+                      <p className="text-sm text-gray-500 dark:text-slate-400 mb-4">{course.instructor}</p>
                       
                       {/* Progress Bar */}
                       <div className="mb-4">
@@ -432,7 +432,7 @@ const response = await fetch(`${API_BASE_URL}/enroll/${courseId}`, {
           <>
             {/* Featured Section */}
             <div className="mb-8">
-              <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                 <Award className="w-5 h-5 text-yellow-500" />
                 Featured Courses
               </h2>
@@ -440,7 +440,7 @@ const response = await fetch(`${API_BASE_URL}/enroll/${courseId}`, {
                 {allCourses.slice(0, 2).map((course) => (
                   <div 
                     key={course.id} 
-                    className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 group cursor-pointer"
+                    className="bg-white dark:bg-[#091328] rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 group cursor-pointer border border-gray-100 dark:border-white/5"
                     onClick={() => navigate(`/courses/${course.id}`)}
                   >
                     <div className="flex">
@@ -455,11 +455,11 @@ const response = await fetch(`${API_BASE_URL}/enroll/${courseId}`, {
                       </div>
                       <div className="flex-1 p-5">
                         <div className="flex items-center gap-2 mb-2">
-                          <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-medium rounded">{course.category}</span>
-                          <span className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs font-medium rounded">{course.level}</span>
+                          <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-xs font-medium rounded">{course.category}</span>
+                          <span className="px-2 py-0.5 bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-400 text-xs font-medium rounded">{course.level}</span>
                         </div>
-                        <h3 className="font-bold text-lg text-gray-900 mb-1">{course.title}</h3>
-                        <p className="text-sm text-gray-500 mb-3">{course.instructor}</p>
+                        <h3 className="font-bold text-lg text-gray-900 dark:text-white mb-1">{course.title}</h3>
+                        <p className="text-sm text-gray-500 dark:text-slate-400 mb-3">{course.instructor}</p>
                         <div className="flex items-center gap-4 text-sm text-gray-500 mb-3">
                           <div className="flex items-center gap-1">
                             <Users className="w-4 h-4" />
@@ -476,8 +476,8 @@ const response = await fetch(`${API_BASE_URL}/enroll/${courseId}`, {
                         </div>
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
-                            <span className="text-2xl font-bold text-gray-900">${course.price}</span>
-                            <span className="text-sm text-gray-400 line-through">${course.originalPrice}</span>
+                            <span className="text-2xl font-bold text-gray-900 dark:text-white">${course.price}</span>
+                            <span className="text-sm text-gray-400 dark:text-slate-500 line-through">${course.originalPrice}</span>
                           </div>
                           {isEnrolled(course.id) ? (
                             <button
@@ -513,10 +513,10 @@ const response = await fetch(`${API_BASE_URL}/enroll/${courseId}`, {
 
             {/* All Courses Grid */}
             <div>
-              <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                 <BarChart3 className="w-5 h-5 text-blue-500" />
                 All Courses
-                <span className="text-sm font-normal text-gray-500">({filteredAllCourses.length} courses)</span>
+                <span className="text-sm font-normal text-gray-500 dark:text-slate-400">({filteredAllCourses.length} courses)</span>
               </h2>
               {allCourses.length === 0 ? (
                 <div className="text-center py-16">
@@ -538,7 +538,7 @@ const response = await fetch(`${API_BASE_URL}/enroll/${courseId}`, {
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {filteredAllCourses.map((course) => (
-                    <div key={course.id} className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 group">
+                    <div key={course.id} className="bg-white dark:bg-[#091328] rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 group border border-gray-100 dark:border-white/5">
                       <div className="relative">
                         <img src={course.image} alt={course.title} className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300" />
                         <div className="absolute top-3 left-3 flex gap-2">
@@ -562,8 +562,8 @@ const response = await fetch(`${API_BASE_URL}/enroll/${courseId}`, {
                         </div>
                       </div>
                       <div className="p-6">
-                        <h3 className="font-bold text-lg text-gray-900 mb-1">{course.title}</h3>
-                        <p className="text-sm text-gray-500 mb-3">{course.instructor}</p>
+                        <h3 className="font-bold text-lg text-gray-900 dark:text-white mb-1">{course.title}</h3>
+                        <p className="text-sm text-gray-500 dark:text-slate-400 mb-3">{course.instructor}</p>
                         
                         <div className="flex items-center gap-4 text-sm text-gray-500 mb-3">
                           <div className="flex items-center gap-1">
@@ -583,8 +583,8 @@ const response = await fetch(`${API_BASE_URL}/enroll/${courseId}`, {
                             <span className="text-gray-400">({course.level})</span>
                           </div>
                           <div className="flex items-center gap-2">
-                            <span className="text-xl font-bold text-gray-900">${course.price}</span>
-                            <span className="text-sm text-gray-400 line-through">${course.originalPrice}</span>
+                            <span className="text-xl font-bold text-gray-900 dark:text-white">${course.price}</span>
+                            <span className="text-sm text-gray-400 dark:text-slate-500 line-through">${course.originalPrice}</span>
                           </div>
                         </div>
 

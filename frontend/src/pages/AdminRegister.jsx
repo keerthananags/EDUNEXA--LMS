@@ -57,20 +57,20 @@ export default function AdminRegister() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 flex items-center justify-center p-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#060e20] flex items-center justify-center p-8 transition-colors duration-200">
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-500 rounded-2xl mb-4">
             <Shield className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-white mb-2">Admin Portal</h1>
-          <p className="text-gray-400">EduNexa LMS Administration</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Admin Portal</h1>
+          <p className="text-gray-500 dark:text-gray-400">EduNexa LMS Administration</p>
         </div>
 
         {/* Register Card */}
-        <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20">
-          <h2 className="text-2xl font-bold text-white mb-6">Create Admin Account</h2>
+        <div className="bg-white dark:bg-[#091328] rounded-2xl p-8 border border-gray-200 dark:border-white/5 shadow-xl transition-colors duration-200">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Create Admin Account</h2>
 
           {error && (
             <div className="bg-red-500/20 border border-red-500/50 text-red-200 px-4 py-3 rounded-lg mb-6">
@@ -80,7 +80,7 @@ export default function AdminRegister() {
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Full Name
               </label>
               <div className="relative">
@@ -92,13 +92,13 @@ export default function AdminRegister() {
                   onChange={handleChange}
                   required
                   placeholder="Enter your name"
-                  className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                  className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-[#1a2544] border border-gray-200 dark:border-white/10 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Admin Email
               </label>
               <div className="relative">
@@ -110,13 +110,13 @@ export default function AdminRegister() {
                   onChange={handleChange}
                   required
                   placeholder="admin@edunexa.com"
-                  className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                  className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-[#1a2544] border border-gray-200 dark:border-white/10 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Password
               </label>
               <div className="relative">
@@ -129,7 +129,7 @@ export default function AdminRegister() {
                   required
                   minLength={6}
                   placeholder="••••••••"
-                  className="w-full pl-10 pr-12 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                  className="w-full pl-10 pr-12 py-3 bg-gray-50 dark:bg-[#1a2544] border border-gray-200 dark:border-white/10 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
                 />
                 <button
                   type="button"

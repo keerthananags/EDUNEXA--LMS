@@ -33,7 +33,7 @@ export default function ModernDashboard() {
   };
 
   return (
-    <div className="bg-[#F8F9FF] min-h-screen flex font-sans">
+    <div className="bg-[#F8F9FF] dark:bg-[#060e20] min-h-screen flex font-sans transition-colors duration-200">
       <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} user={user} />
       <div className="flex-1 flex flex-col overflow-hidden">
         <Navbar user={user} />
@@ -60,7 +60,7 @@ function Navbar({ user }) {
   const navigate = useNavigate();
 
   return (
-    <div className="flex justify-between items-center px-8 py-4 bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50">
+    <div className="flex justify-between items-center px-8 py-4 bg-white/80 dark:bg-[#091328]/80 backdrop-blur-md shadow-sm sticky top-0 z-50 border-b border-gray-200 dark:border-white/5 transition-colors duration-200">
       <Link to="/" className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-cyan-400 text-transparent bg-clip-text hover:opacity-80 transition">
         EduNexa
       </Link>
@@ -69,7 +69,7 @@ function Navbar({ user }) {
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
         <input
           placeholder="Search courses..."
-          className="w-full pl-12 pr-4 py-2.5 rounded-xl bg-gray-100 outline-none focus:ring-2 focus:ring-purple-400 transition-all"
+          className="w-full pl-12 pr-4 py-2.5 rounded-xl bg-gray-100 dark:bg-[#1a2544] outline-none focus:ring-2 focus:ring-purple-400 transition-all text-gray-900 dark:text-white"
         />
       </div>
 
@@ -82,16 +82,16 @@ function Navbar({ user }) {
             🛡️ Admin Panel
           </button>
         )}
-        <button className="relative p-2 text-gray-600 hover:text-purple-600 transition">
+        <button className="relative p-2 text-gray-600 dark:text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 transition">
           <Bell className="w-6 h-6" />
           <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
         </button>
         <div className="w-10 h-10 bg-gradient-to-br from-purple-400 to-cyan-300 rounded-full shadow-sm flex items-center justify-center text-white font-semibold">
           {user?.name?.charAt(0) || "G"}
         </div>
-        <div className="hidden md:block">
-          <p className="text-sm font-semibold text-gray-800">{user?.name || "Guest"}</p>
-          <p className="text-xs text-gray-500 capitalize">{user?.role || "Visitor"}</p>
+        <div className="hidden md:block text-left">
+          <p className="text-sm font-semibold text-gray-800 dark:text-white">{user?.name || "Guest"}</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">{user?.role || "Visitor"}</p>
         </div>
         <button 
           onClick={() => navigate("/dashboard")}
@@ -123,7 +123,7 @@ function Sidebar({ activeTab, setActiveTab, user }) {
   };
 
   return (
-    <div className="w-64 h-screen bg-white shadow-lg p-6 flex flex-col justify-between z-40 relative">
+    <div className="w-64 h-screen bg-white dark:bg-[#091328] shadow-lg p-6 flex flex-col justify-between z-40 relative border-r border-gray-200 dark:border-white/5 transition-colors duration-200">
       <div>
         <Link to="/" className="block mb-10">
           <h2 className="text-2xl font-black bg-gradient-to-r from-purple-600 to-cyan-400 text-transparent bg-clip-text">EduNexa</h2>
@@ -138,8 +138,8 @@ function Sidebar({ activeTab, setActiveTab, user }) {
                 onClick={() => setActiveTab(item.id)}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-200 ${
                   isActive
-                    ? "bg-gradient-to-r from-purple-600 to-cyan-400 text-white shadow-lg shadow-purple-200"
-                    : "text-gray-600 hover:bg-purple-50 hover:text-purple-700"
+                    ? "bg-gradient-to-r from-purple-600 to-cyan-400 text-white shadow-lg shadow-purple-200 dark:shadow-none"
+                    : "text-gray-600 dark:text-gray-400 hover:bg-purple-50 dark:hover:bg-white/5 hover:text-purple-700 dark:hover:text-purple-400"
                 }`}
               >
                 <Icon className="w-5 h-5" />
@@ -163,7 +163,7 @@ function Sidebar({ activeTab, setActiveTab, user }) {
         {user ? (
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-4 py-3 text-red-600 hover:bg-red-50 rounded-xl font-medium transition-all"
+            className="w-full flex items-center gap-3 px-4 py-3 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-xl font-medium transition-all"
           >
             <LogOut className="w-5 h-5" />
             <span>Logout ({user.name})</span>
@@ -196,7 +196,7 @@ function Dashboard({ onTabChange }) {
       <motion.h1 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="text-3xl font-bold mb-8 text-gray-800"
+        className="text-3xl font-bold mb-8 text-gray-800 dark:text-white"
       >
         Welcome Back 👋
       </motion.h1>
@@ -210,12 +210,12 @@ function Dashboard({ onTabChange }) {
 
       {/* Section */}
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-800">Your Courses</h2>
+        <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Your Courses</h2>
         <motion.button 
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => onTabChange("courses")}
-          className="flex items-center gap-2 px-5 py-2.5 bg-gray-900 hover:bg-gray-800 text-white rounded-xl font-medium transition-colors shadow-sm"
+          className="flex items-center gap-2 px-5 py-2.5 bg-gray-900 dark:bg-white dark:text-[#060e20] hover:bg-gray-800 dark:hover:bg-gray-100 text-white rounded-xl font-medium transition-colors shadow-sm"
         >
           <Plus className="w-5 h-5" />
           Add Course
@@ -240,9 +240,9 @@ function StatCard({ title, value, delay, onClick }) {
       transition={{ delay }}
       whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
       onClick={onClick}
-      className="p-6 bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col gap-2 transition-all cursor-pointer"
+      className="p-6 bg-white dark:bg-[#091328] rounded-2xl shadow-sm border border-gray-100 dark:border-white/5 flex flex-col gap-2 transition-all cursor-pointer"
     >
-      <h3 className="text-gray-500 font-medium">{title}</h3>
+      <h3 className="text-gray-500 dark:text-gray-400 font-medium">{title}</h3>
       <p className="text-4xl font-extrabold bg-gradient-to-br from-purple-600 to-cyan-500 bg-clip-text text-transparent">{value}</p>
     </motion.div>
   );
@@ -256,7 +256,7 @@ function CourseCard({ title, progress, delay, image }) {
       animate={{ opacity: 1, scale: 1 }}
       transition={{ delay }}
       whileHover={{ y: -8, boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)" }}
-      className="p-4 bg-white rounded-2xl shadow-sm border border-gray-50 flex flex-col h-full"
+      className="p-4 bg-white dark:bg-[#091328] rounded-2xl shadow-sm border border-gray-50 dark:border-white/5 flex flex-col h-full transition-colors duration-200"
     >
       <div className="relative overflow-hidden rounded-xl h-48 w-full mb-4">
         <img
@@ -268,13 +268,12 @@ function CourseCard({ title, progress, delay, image }) {
           Popular
         </div>
       </div>
-
-      <h3 className="font-bold text-lg text-gray-800 tracking-tight flex-1">{title}</h3>
+      <h3 className="font-bold text-lg text-gray-800 dark:text-white tracking-tight flex-1">{title}</h3>
 
       <div className="mt-4 mb-4">
-        <div className="flex justify-between text-sm font-medium text-gray-500 mb-2">
+        <div className="flex justify-between text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">
           <span>Overall Progress</span>
-          <span className="text-purple-600">{progress}</span>
+          <span className="text-purple-600 dark:text-purple-400">{progress}</span>
         </div>
         <div className="w-full bg-gray-100 h-2.5 rounded-full overflow-hidden">
           <motion.div
@@ -298,7 +297,7 @@ function CourseCard({ title, progress, delay, image }) {
 function CoursesView() {
   return (
     <div className="p-8">
-      <h2 className="text-3xl font-bold text-gray-800 mb-8">All Courses</h2>
+      <h2 className="text-3xl font-bold text-gray-800 dark:text-white mb-8">All Courses</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <CourseCard title="Full Stack Web Dev" progress="0%" delay={0.1} image="https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=400" />
         <CourseCard title="Python for Beginners" progress="0%" delay={0.2} image="https://images.unsplash.com/photo-1526379095098-d400fd0bf935?w=400" />
@@ -321,26 +320,26 @@ function StudentsView() {
 
   return (
     <div className="p-8">
-      <h2 className="text-3xl font-bold text-gray-800 mb-8">Students</h2>
-      <div className="bg-white rounded-2xl shadow-md overflow-hidden">
+      <h2 className="text-3xl font-bold text-gray-800 dark:text-white mb-8">Students</h2>
+      <div className="bg-white dark:bg-[#091328] rounded-2xl shadow-md overflow-hidden border border-gray-100 dark:border-white/5">
         <table className="w-full">
-          <thead className="bg-gray-50">
+          <thead className="bg-gray-50 dark:bg-white/5">
             <tr>
-              <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">Student</th>
-              <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">Course</th>
-              <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">Progress</th>
+              <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600 dark:text-gray-300">Student</th>
+              <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600 dark:text-gray-300">Course</th>
+              <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600 dark:text-gray-300">Progress</th>
             </tr>
           </thead>
           <tbody>
             {students.map((student) => (
-              <tr key={student.id} className="border-t border-gray-100">
+              <tr key={student.id} className="border-t border-gray-100 dark:border-white/5">
                 <td className="px-6 py-4">
-                  <p className="font-semibold text-gray-900">{student.name}</p>
-                  <p className="text-sm text-gray-500">{student.email}</p>
+                  <p className="font-semibold text-gray-900 dark:text-white">{student.name}</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">{student.email}</p>
                 </td>
-                <td className="px-6 py-4 text-gray-700">{student.course}</td>
+                <td className="px-6 py-4 text-gray-700 dark:text-gray-300">{student.course}</td>
                 <td className="px-6 py-4">
-                  <span className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-medium">
+                  <span className="px-3 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 rounded-full text-sm font-medium">
                     {student.progress}
                   </span>
                 </td>
@@ -357,18 +356,18 @@ function StudentsView() {
 function AnalyticsView() {
   return (
     <div className="p-8">
-      <h2 className="text-3xl font-bold text-gray-800 mb-8">Analytics</h2>
+      <h2 className="text-3xl font-bold text-gray-800 dark:text-white mb-8">Analytics</h2>
       <div className="grid md:grid-cols-2 gap-6">
-        <div className="bg-white rounded-2xl shadow-md p-6">
-          <h3 className="text-lg font-semibold text-gray-700 mb-4">Revenue Overview</h3>
-          <div className="h-48 bg-gradient-to-br from-purple-100 to-cyan-100 rounded-xl flex items-center justify-center">
-            <p className="text-gray-500">Chart Placeholder</p>
+        <div className="bg-white dark:bg-[#091328] rounded-2xl shadow-md p-6 border border-gray-100 dark:border-white/5 transition-colors duration-200">
+          <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-4">Revenue Overview</h3>
+          <div className="h-48 bg-gradient-to-br from-purple-100 to-cyan-100 dark:from-purple-900/20 dark:to-cyan-900/20 rounded-xl flex items-center justify-center">
+            <p className="text-gray-500 dark:text-gray-400">Chart Placeholder</p>
           </div>
         </div>
-        <div className="bg-white rounded-2xl shadow-md p-6">
-          <h3 className="text-lg font-semibold text-gray-700 mb-4">Student Growth</h3>
-          <div className="h-48 bg-gradient-to-br from-blue-100 to-purple-100 rounded-xl flex items-center justify-center">
-            <p className="text-gray-500">Chart Placeholder</p>
+        <div className="bg-white dark:bg-[#091328] rounded-2xl shadow-md p-6 border border-gray-100 dark:border-white/5 transition-colors duration-200">
+          <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-4">Student Growth</h3>
+          <div className="h-48 bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900/20 dark:to-purple-900/20 rounded-xl flex items-center justify-center">
+            <p className="text-gray-500 dark:text-gray-400">Chart Placeholder</p>
           </div>
         </div>
       </div>
@@ -380,16 +379,16 @@ function AnalyticsView() {
 function SettingsView() {
   return (
     <div className="p-8">
-      <h2 className="text-3xl font-bold text-gray-800 mb-8">Settings</h2>
-      <div className="max-w-2xl bg-white rounded-2xl shadow-md p-6">
+      <h2 className="text-3xl font-bold text-gray-800 dark:text-white mb-8">Settings</h2>
+      <div className="max-w-2xl bg-white dark:bg-[#091328] rounded-2xl shadow-md p-6 border border-gray-100 dark:border-white/5 transition-colors duration-200">
         <div className="space-y-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Name</label>
-            <input type="text" value="John Doe" className="w-full px-4 py-2 rounded-xl bg-gray-100 outline-none" readOnly />
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Name</label>
+            <input type="text" value="John Doe" className="w-full px-4 py-2 rounded-xl bg-gray-100 dark:bg-[#1a2544] outline-none text-gray-900 dark:text-white" readOnly />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
-            <input type="email" value="john@example.com" className="w-full px-4 py-2 rounded-xl bg-gray-100 outline-none" readOnly />
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Email</label>
+            <input type="email" value="john@example.com" className="w-full px-4 py-2 rounded-xl bg-gray-100 dark:bg-[#1a2544] outline-none text-gray-900 dark:text-white" readOnly />
           </div>
           <button className="px-6 py-3 bg-gradient-to-r from-purple-600 to-cyan-400 text-white rounded-xl font-semibold hover:opacity-90 transition">
             Save Changes

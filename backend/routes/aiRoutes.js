@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { chatWithAI } = require("../controllers/aiController");
+const { chatWithAI, summarizeCourse } = require("../controllers/aiController");
 const { protect } = require("../middleware/auth");
 
 /**
@@ -10,12 +10,18 @@ const { protect } = require("../middleware/auth");
  *     summary: Chat with AI Tutor (Gemini)
  *     description: |
  *       Chat with AI tutor powered by Google Gemini.
- *       **Models Used (in order of preference):**
- *       1. gemini-1.5-flash-002 (latest stable)
- *       2. gemini-1.5-pro-002 (latest stable)
- *       3. gemini-1.5-flash-001 (stable)
- *       4. gemini-1.5-pro-001 (stable)
- *       5. gemini-1.0-pro-001 (legacy fallback)
+ *       **Primary Model:** `gemini-1.5-flash-002` (with 3 retry attempts on 503 errors)
+ *       
+ *       **Retry Logic:**
+ *       - Attempt 1: Immediate call
+ *       - Attempt 2: Wait 1 second if 503 error
+ *       - Attempt 3: Wait 2 seconds if 503 error
+ *       
+ *       **Fallback Models (if primary fails):**
+ *       1. gemini-1.5-flash-001
+ *       2. gemini-1.5-pro-002
+ *       3. gemini-1.5-pro-001
+ *       4. gemini-1.0-pro-001
  *     tags: [AI]
  *     security:
  *       - bearerAuth: []
@@ -115,6 +121,7 @@ const { protect } = require("../middleware/auth");
 
 // 🔐 Protected route (production)
 router.post("/chat", protect, chatWithAI);
+router.get("/summarize-course/:courseId", protect, summarizeCourse);
 
 // 🔓 OPTIONAL: Public route for testing (REMOVE in production)
 // router.post("/chat", chatWithAI);

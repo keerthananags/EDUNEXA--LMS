@@ -1,10 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { MessageCircle, X, Send, Sparkles, Bot, User } from 'lucide-react';
-import { aiAPI } from '../utils/api';
+import { aiAPI, API_BASE_URL } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
-
-// Production backend URL - FORCE CORRECT URL
-const API_BASE_URL = 'https://edunexa-lms-zx8q.onrender.com/api';
 
 export default function AIChat({ courseTitle, courseContent }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -71,7 +68,7 @@ export default function AIChat({ courseTitle, courseContent }) {
         } : null
       });
 
-      setMessages(prev => [...prev, { role: 'assistant', content: res.response }]);
+      setMessages(prev => [...prev, { role: 'assistant', content: res.reply }]);
     } catch (err) {
       console.error('Chat error:', err);
       
@@ -129,12 +126,12 @@ export default function AIChat({ courseTitle, courseContent }) {
 
       {/* Chat Window */}
       {isOpen && (
-        <div className="fixed bottom-24 right-6 w-96 h-[500px] bg-[#091328] rounded-2xl shadow-2xl border border-white/10 flex flex-col z-50 overflow-hidden">
+        <div className="fixed bottom-24 right-6 w-96 h-[500px] bg-white dark:bg-[#091328] rounded-2xl shadow-2xl border border-gray-200 dark:border-white/10 flex flex-col z-50 overflow-hidden transition-colors duration-200">
           {/* Header */}
-          <div className="bg-gradient-to-r from-[#5764f1] to-[#c081ff] p-4 flex items-center justify-between">
+          <div className="bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-[#5764f1] dark:to-[#c081ff] p-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
-                <Bot className="w-5 h-5" />
+                <Bot className="w-5 h-5 text-white" />
               </div>
               <div>
                 <h3 className="font-bold text-white">AI Tutor</h3>
@@ -144,43 +141,43 @@ export default function AIChat({ courseTitle, courseContent }) {
           </div>
 
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50 dark:bg-transparent">
             {messages.map((msg, index) => (
               <div
                 key={index}
                 className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : ''}`}
               >
                 {msg.role === 'assistant' && (
-                  <div className="w-8 h-8 bg-gradient-to-r from-[#5764f1] to-[#c081ff] rounded-full flex items-center justify-center flex-shrink-0">
+                  <div className="w-8 h-8 bg-gradient-to-r from-indigo-500 to-purple-500 dark:from-[#5764f1] dark:to-[#c081ff] rounded-full flex items-center justify-center flex-shrink-0">
                     <Bot className="w-4 h-4 text-white" />
                   </div>
                 )}
                 <div
                   className={`max-w-[80%] p-3 rounded-2xl text-sm ${
                     msg.role === 'user'
-                      ? 'bg-gradient-to-r from-[#5764f1] to-[#c081ff] text-white rounded-br-none'
-                      : 'bg-[#192540] text-[#dee5ff] rounded-bl-none'
+                      ? 'bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-[#5764f1] dark:to-[#c081ff] text-white rounded-br-none'
+                      : 'bg-white dark:bg-[#192540] text-slate-800 dark:text-[#dee5ff] rounded-bl-none shadow-sm border border-gray-100 dark:border-none'
                   }`}
                 >
                   {msg.content}
                 </div>
                 {msg.role === 'user' && (
-                  <div className="w-8 h-8 bg-[#253550] rounded-full flex items-center justify-center flex-shrink-0">
-                    <User className="w-4 h-4 text-[#dee5ff]" />
+                  <div className="w-8 h-8 bg-gray-200 dark:bg-[#253550] rounded-full flex items-center justify-center flex-shrink-0">
+                    <User className="w-4 h-4 text-slate-600 dark:text-[#dee5ff]" />
                   </div>
                 )}
               </div>
             ))}
             {isLoading && (
               <div className="flex gap-3">
-                <div className="w-8 h-8 bg-gradient-to-r from-[#5764f1] to-[#c081ff] rounded-full flex items-center justify-center">
+                <div className="w-8 h-8 bg-gradient-to-r from-indigo-500 to-purple-500 dark:from-[#5764f1] dark:to-[#c081ff] rounded-full flex items-center justify-center">
                   <Bot className="w-4 h-4 text-white animate-pulse" />
                 </div>
-                <div className="bg-[#192540] p-3 rounded-2xl rounded-bl-none">
+                <div className="bg-white dark:bg-[#192540] p-3 rounded-2xl rounded-bl-none shadow-sm border border-gray-100 dark:border-none">
                   <div className="flex gap-1">
-                    <span className="w-2 h-2 bg-[#dee5ff] rounded-full animate-bounce"></span>
-                    <span className="w-2 h-2 bg-[#dee5ff] rounded-full animate-bounce delay-100"></span>
-                    <span className="w-2 h-2 bg-[#dee5ff] rounded-full animate-bounce delay-200"></span>
+                    <span className="w-2 h-2 bg-indigo-500 dark:bg-[#dee5ff] rounded-full animate-bounce"></span>
+                    <span className="w-2 h-2 bg-indigo-500 dark:bg-[#dee5ff] rounded-full animate-bounce delay-100"></span>
+                    <span className="w-2 h-2 bg-indigo-500 dark:bg-[#dee5ff] rounded-full animate-bounce delay-200"></span>
                   </div>
                 </div>
               </div>
@@ -189,13 +186,13 @@ export default function AIChat({ courseTitle, courseContent }) {
           </div>
 
           {/* Quick Actions */}
-          <div className="px-4 py-2 border-t border-white/10">
+          <div className="px-4 py-2 border-t border-gray-100 dark:border-white/10 bg-white dark:bg-transparent">
             <div className="flex gap-2 overflow-x-auto">
               {quickActions.map((action, idx) => (
                 <button
                   key={idx}
                   onClick={action.action}
-                  className="flex items-center gap-1 px-3 py-1.5 bg-[#192540] hover:bg-[#253550] rounded-full text-xs text-[#dee5ff] transition whitespace-nowrap"
+                  className="flex items-center gap-1 px-3 py-1.5 bg-gray-100 dark:bg-[#192540] hover:bg-gray-200 dark:hover:bg-[#253550] rounded-full text-xs text-slate-700 dark:text-[#dee5ff] transition whitespace-nowrap"
                 >
                   <action.icon className="w-3 h-3" />
                   {action.label}
@@ -205,7 +202,7 @@ export default function AIChat({ courseTitle, courseContent }) {
           </div>
 
           {/* Input */}
-          <div className="p-4 border-t border-white/10">
+          <div className="p-4 border-t border-gray-100 dark:border-white/10 bg-white dark:bg-transparent">
             <div className="flex gap-2">
               <input
                 type="text"
@@ -213,19 +210,20 @@ export default function AIChat({ courseTitle, courseContent }) {
                 onChange={(e) => setInput(e.target.value)}
                 onKeyPress={handleKeyPress}
                 placeholder="Ask me anything..."
-                className="flex-1 px-4 py-2 bg-[#192540] border border-white/10 rounded-xl text-[#dee5ff] placeholder-slate-500 focus:outline-none focus:border-[#5764f1]"
+                className="flex-1 px-4 py-2 bg-gray-50 dark:bg-[#192540] border border-gray-200 dark:border-white/10 rounded-xl text-slate-800 dark:text-[#dee5ff] placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:border-[#5764f1]"
               />
               <button
                 onClick={handleSend}
                 disabled={!input.trim() || isLoading}
-                className="p-2 bg-gradient-to-r from-[#5764f1] to-[#c081ff] rounded-xl text-white hover:shadow-lg transition disabled:opacity-50"
+                className="p-2 bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-[#5764f1] dark:to-[#c081ff] rounded-xl text-white hover:shadow-lg transition disabled:opacity-50"
               >
                 <Send className="w-5 h-5" />
               </button>
             </div>
           </div>
         </div>
-      )}
+      )
+    }
     </>
   );
 }

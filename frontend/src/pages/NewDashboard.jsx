@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { 
   Users, 
@@ -20,8 +20,12 @@ import {
   Activity,
   Target,
   Zap,
-  Loader2
+  Loader2,
+  AlertCircle,
+  RefreshCcw
 } from "lucide-react";
+import { toast } from "react-toastify";
+import Skeleton from "../components/Skeleton";
 import Sidebar from "../components/Sidebar";
 import TopNavBar from "../components/TopNavBar";
 import AIChat from "../components/AIChat";
@@ -47,6 +51,7 @@ export default function NewDashboard() {
     studyHours: 0,
     quizScore: 0
   });
+  const [error, setError] = useState(null);
 
   // Fetch data on mount
   useEffect(() => {
@@ -150,7 +155,9 @@ export default function NewDashboard() {
         setAllCourses(transformedCourses);
       }
     } catch (error) {
-      console.error('Failed to fetch dashboard data:', error);
+      console.error('Error fetching dashboard:', error);
+      setError(error.message);
+      toast.error("Failed to load dashboard data");
     } finally {
       setLoading(false);
     }
@@ -229,21 +236,72 @@ export default function NewDashboard() {
     { id: 2, title: "Practice Exercise", course: "Stay on Track", date: "Tomorrow", urgent: false },
   ];
 
+  if (error) {
+    return (
+      <div className="min-h-screen bg-white dark:bg-[#060e20] flex flex-col items-center justify-center p-4">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white dark:bg-[#091328] rounded-3xl p-8 max-w-md w-full shadow-2xl flex flex-col items-center gap-6 border border-red-500/20"
+        >
+          <div className="w-16 h-16 bg-red-500/10 rounded-2xl flex items-center justify-center">
+            <AlertCircle className="w-10 h-10 text-red-500" />
+          </div>
+          <div className="text-center">
+            <h2 className="text-2xl font-bold mb-2 dark:text-white">Connection Error</h2>
+            <p className="text-slate-500 text-sm mb-6">{error}</p>
+            <button 
+              onClick={() => { setError(null); setLoading(true); fetchDashboardData(); }}
+              className="flex items-center justify-center gap-2 w-full px-6 py-3 bg-[#5764f1] text-white rounded-xl font-bold hover:bg-[#4652e0] transition-colors"
+            >
+              <RefreshCcw className="w-5 h-5" />
+              Reconnect
+            </button>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
   if (loading) {
     return (
-      <div className="bg-[#060e20] text-[#dee5ff] min-h-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-[#5764f1]" />
+      <div className="bg-gray-50 dark:bg-[#060e20] min-h-screen">
+        <div className="ml-64 p-8 max-w-7xl mx-auto space-y-8">
+          <Skeleton className="h-64 w-full rounded-2xl" />
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+            {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-32 w-full rounded-2xl" />)}
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-2 space-y-6">
+              <Skeleton className="h-8 w-48" />
+              <div className="grid grid-cols-2 gap-6">
+                {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-48 w-full rounded-xl" />)}
+              </div>
+            </div>
+            <div className="space-y-6">
+              <Skeleton className="h-64 w-full rounded-xl" />
+              <Skeleton className="h-48 w-full rounded-xl" />
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-[#060e20] text-[#dee5ff] min-h-screen">
+    <div className="bg-gray-50 dark:bg-[#060e20] text-slate-900 dark:text-[#dee5ff] min-h-screen transition-colors duration-200">
       <Sidebar />
       <main className="ml-64 min-h-screen">
         <TopNavBar title="Dashboard" />
         
-        <div className="p-8 max-w-7xl mx-auto space-y-8">
+        <AnimatePresence mode="wait">
+          <motion.div 
+            key="dashboard-content"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            className="p-8 max-w-7xl mx-auto space-y-8"
+          >
           {/* Hero Section - Continue Learning */}
           <section className="relative rounded-2xl overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-r from-[#060e20] via-[#060e20]/60 to-transparent z-10"></div>
@@ -278,9 +336,9 @@ export default function NewDashboard() {
                     {myCourses.length > 0 ? Math.round((myCourses[0].progress / 100) * 20) : 0}/20 Lessons
                   </span>
                 </div>
-                <div className="w-full h-2 bg-[#192540] rounded-full overflow-hidden">
+                <div className="w-full h-2 bg-white/10 dark:bg-[#192540] rounded-full overflow-hidden">
                   <div 
-                    className="h-full bg-gradient-to-r from-cyan-400 to-purple-400 transition-all duration-500"
+                    className="h-full bg-gradient-to-r from-cyan-400 to-purple-400 transition-all duration-500 shadow-[0_0_15px_rgba(34,211,238,0.5)]"
                     style={{ width: `${myCourses.length > 0 ? myCourses[0].progress : 0}%` }}
                   ></div>
                 </div>
@@ -305,7 +363,7 @@ export default function NewDashboard() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
-                className="bg-[#091328] rounded-2xl p-6 border border-white/5 hover:border-white/10 transition-all cursor-pointer"
+                className="bg-white dark:bg-[#091328] rounded-2xl p-6 border border-gray-200 dark:border-white/5 hover:border-indigo-200 dark:hover:border-white/10 shadow-sm transition-all cursor-pointer"
                 onClick={() => navigate('/analytics')}
               >
                 <div className="flex items-start justify-between mb-4">
@@ -324,12 +382,12 @@ export default function NewDashboard() {
                     {stat.change}
                   </span>
                 </div>
-                <h3 className="text-3xl font-bold mb-1">{stat.value}</h3>
-                <p className="text-sm text-slate-400">{stat.title}</p>
+                <h3 className="text-3xl font-bold mb-1 text-gray-900 dark:text-white">{stat.value}</h3>
+                <p className="text-sm text-slate-500 dark:text-slate-400">{stat.title}</p>
                 
                 {stat.progress && (
                   <div className="mt-4">
-                    <div className="w-full h-1.5 bg-[#192540] rounded-full overflow-hidden">
+                    <div className="w-full h-1.5 bg-gray-100 dark:bg-[#192540] rounded-full overflow-hidden">
                       <div 
                         className="h-full bg-gradient-to-r from-cyan-400 to-purple-400"
                         style={{ width: `${stat.progress}%` }}
@@ -369,7 +427,7 @@ export default function NewDashboard() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
-              className="bg-[#091328] rounded-2xl p-6 border border-white/5"
+              className="bg-white dark:bg-[#091328] rounded-2xl p-6 border border-gray-200 dark:border-white/5 shadow-sm"
             >
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-xl font-bold">Learning Activity</h3>
@@ -408,7 +466,7 @@ export default function NewDashboard() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
-              className="bg-[#091328] rounded-2xl p-6 border border-white/5"
+              className="bg-white dark:bg-[#091328] rounded-2xl p-6 border border-gray-200 dark:border-white/5 shadow-sm"
             >
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-xl font-bold">Course Progress</h3>
@@ -421,7 +479,7 @@ export default function NewDashboard() {
                       cx="96"
                       cy="96"
                       r="88"
-                      stroke="#1e3a5f"
+                      className="stroke-gray-100 dark:stroke-[#1e3a5f]"
                       strokeWidth="12"
                       fill="none"
                     />
@@ -458,7 +516,7 @@ export default function NewDashboard() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
-            className="bg-[#091328] rounded-2xl p-6 border border-white/5"
+            className="bg-white dark:bg-[#091328] rounded-2xl p-6 border border-gray-200 dark:border-white/5 shadow-sm"
           >
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-bold">Weekly Goals</h3>
@@ -470,10 +528,10 @@ export default function NewDashboard() {
                 { label: 'Study Hours', current: stats.studyHours || 0, target: 30, icon: Clock },
                 { label: 'Quiz Score', current: stats.quizScore || 0, target: 100, icon: Star },
               ].map((goal, index) => (
-                <div key={goal.label} className="bg-[#0f1930] rounded-xl p-4">
+                <div key={goal.label} className="bg-gray-50 dark:bg-[#0f1930] rounded-xl p-4">
                   <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 bg-gradient-to-br from-cyan-500/20 to-purple-500/20 rounded-lg flex items-center justify-center">
-                      <goal.icon className="w-5 h-5 text-cyan-400" />
+                    <div className="w-10 h-10 bg-indigo-50 dark:bg-gradient-to-br dark:from-cyan-500/20 dark:to-purple-500/20 rounded-lg flex items-center justify-center">
+                      <goal.icon className="w-5 h-5 text-indigo-600 dark:text-cyan-400" />
                     </div>
                     <span className="text-sm font-medium">{goal.label}</span>
                   </div>
@@ -481,7 +539,7 @@ export default function NewDashboard() {
                     <span className="text-slate-400">{goal.current}/{goal.target}</span>
                     <span className="text-cyan-400">{Math.round((goal.current / goal.target) * 100)}%</span>
                   </div>
-                  <div className="w-full h-2 bg-[#192540] rounded-full overflow-hidden">
+                  <div className="w-full h-2 bg-gray-100 dark:bg-[#192540] rounded-full overflow-hidden">
                     <motion.div
                       initial={{ width: 0 }}
                       animate={{ width: `${(goal.current / goal.target) * 100}%` }}
@@ -509,13 +567,13 @@ export default function NewDashboard() {
               </div>
               
               {myCourses.length === 0 ? (
-                <div className="bg-[#091328] rounded-xl p-8 text-center">
-                  <BookOpen className="w-12 h-12 text-slate-500 mx-auto mb-4" />
+                <div className="bg-white dark:bg-[#091328] rounded-xl p-8 text-center border border-gray-200 dark:border-white/5 shadow-sm">
+                  <BookOpen className="w-12 h-12 text-slate-400 dark:text-slate-500 mx-auto mb-4" />
                   <h4 className="text-lg font-bold mb-2">No courses yet</h4>
-                  <p className="text-slate-400 mb-4">Enroll in a course to start learning!</p>
+                  <p className="text-slate-500 dark:text-slate-400 mb-4">Enroll in a course to start learning!</p>
                   <button 
                     onClick={() => navigate('/courses')}
-                    className="px-6 py-2 bg-gradient-to-r from-[#5764f1] to-[#c081ff] text-white rounded-full font-bold"
+                    className="px-6 py-2 bg-gradient-to-r from-[#5764f1] to-[#c081ff] text-white rounded-full font-bold shadow-lg shadow-indigo-500/20"
                   >
                     Browse Courses
                   </button>
@@ -525,7 +583,7 @@ export default function NewDashboard() {
                 {myCourses.map((course) => (
                   <div 
                     key={course.id}
-                    className="bg-[#091328] rounded-xl p-5 hover:bg-[#0f1930] transition-all group border border-white/5 cursor-pointer"
+                    className="bg-white dark:bg-[#091328] rounded-xl p-5 hover:bg-gray-50 dark:hover:bg-[#0f1930] transition-all group border border-gray-200 dark:border-white/5 cursor-pointer shadow-sm"
                     onClick={() => navigate(`/courses/${course.id}`)}
                   >
                     <div className="relative aspect-video rounded-lg overflow-hidden mb-4">
@@ -541,7 +599,7 @@ export default function NewDashboard() {
                       {course.duration}
                     </div>
                     <div className="flex items-center gap-3 mb-4">
-                      <div className="flex-1 h-2 bg-[#192540] rounded-full overflow-hidden">
+                      <div className="flex-1 h-2 bg-gray-100 dark:bg-[#192540] rounded-full overflow-hidden">
                         <div 
                           className="h-full bg-gradient-to-r from-cyan-400 to-purple-400"
                           style={{ width: `${course.progress}%` }}
@@ -549,7 +607,7 @@ export default function NewDashboard() {
                       </div>
                       <span className="text-[10px] font-bold text-indigo-400">{course.progress}%</span>
                     </div>
-                    <button className="w-full py-2 bg-[#192540] rounded-full text-xs font-bold hover:bg-[#5764f1] hover:text-white transition-colors">
+                    <button className="w-full py-2 bg-gray-100 dark:bg-[#192540] text-gray-700 dark:text-white rounded-full text-xs font-bold hover:bg-indigo-500 dark:hover:bg-[#5764f1] hover:text-white transition-colors">
                       Resume
                     </button>
                   </div>
@@ -558,20 +616,20 @@ export default function NewDashboard() {
               )}
 
               {/* Learning Hours Chart */}
-              <div className="bg-[#091328] rounded-2xl p-6 border border-white/5">
+              <div className="bg-white dark:bg-[#091328] rounded-2xl p-6 border border-gray-200 dark:border-white/5 shadow-sm">
                 <div className="flex justify-between items-center mb-6">
                   <div>
                     <h4 className="font-bold text-lg">Learning Hours</h4>
-                    <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">Past 7 Days</p>
+                    <p className="text-[10px] text-slate-400 dark:text-slate-500 uppercase tracking-widest font-bold">Past 7 Days</p>
                   </div>
                   <div className="flex gap-2">
-                    <div className="flex items-center gap-2 px-3 py-1 bg-[#192540] rounded-full">
+                    <div className="flex items-center gap-2 px-3 py-1 bg-gray-100 dark:bg-[#192540] rounded-full">
                       <div className="w-2 h-2 rounded-full bg-[#5764f1] shadow-[0_0_8px_rgba(87,100,241,0.6)]"></div>
-                      <span className="text-[10px] font-bold text-slate-300">Design</span>
+                      <span className="text-[10px] font-bold text-slate-600 dark:text-slate-300">Design</span>
                     </div>
-                    <div className="flex items-center gap-2 px-3 py-1 bg-[#192540] rounded-full">
+                    <div className="flex items-center gap-2 px-3 py-1 bg-gray-100 dark:bg-[#192540] rounded-full">
                       <div className="w-2 h-2 rounded-full bg-[#c081ff] shadow-[0_0_8px_rgba(192,129,255,0.6)]"></div>
-                      <span className="text-[10px] font-bold text-slate-300">Dev</span>
+                      <span className="text-[10px] font-bold text-slate-600 dark:text-slate-300">Dev</span>
                     </div>
                   </div>
                 </div>
@@ -595,7 +653,7 @@ export default function NewDashboard() {
                   <h3 className="text-2xl font-bold tracking-tight">Available Courses</h3>
                   <button 
                     onClick={() => navigate('/courses')}
-                    className="px-4 py-2 bg-[#192540] hover:bg-[#5764f1] text-white rounded-lg text-sm font-bold transition"
+                    className="px-4 py-2 bg-gray-200 dark:bg-[#192540] hover:bg-indigo-500 dark:hover:bg-[#5764f1] text-gray-700 dark:text-white rounded-lg text-sm font-bold transition"
                   >
                     View All
                   </button>
@@ -607,7 +665,7 @@ export default function NewDashboard() {
                       className="group cursor-pointer"
                       onClick={() => navigate(`/courses/${item.id}`)}
                     >
-                      <div className="relative rounded-2xl overflow-hidden mb-3 aspect-[4/5] bg-[#192540]">
+                      <div className="relative rounded-2xl overflow-hidden mb-3 aspect-[4/5] bg-gray-100 dark:bg-[#192540]">
                         <img 
                           src={item.image} 
                           alt={item.title}
@@ -644,15 +702,15 @@ export default function NewDashboard() {
             {/* Right Sidebar */}
             <aside className="space-y-6">
               {/* Activity Level */}
-              <div className="bg-[#141f38] rounded-xl p-6 relative overflow-hidden">
-                <div className="absolute -top-10 -right-10 w-32 h-32 bg-[#5764f1]/10 blur-[50px] rounded-full"></div>
+              <div className="bg-white dark:bg-[#141f38] rounded-xl p-6 relative overflow-hidden border border-gray-200 dark:border-white/5 shadow-sm">
+                <div className="absolute -top-10 -right-10 w-32 h-32 bg-indigo-500/5 dark:bg-[#5764f1]/10 blur-[50px] rounded-full"></div>
                 <h4 className="font-bold text-lg mb-6 flex items-center gap-2">
                   <Flame className="w-5 h-5 text-[#9fa7ff]" />
                   Activity Level
                 </h4>
                 <div className="relative flex justify-center items-center mb-8">
                   <svg className="w-32 h-32 transform -rotate-90">
-                    <circle cx="64" cy="64" fill="transparent" r="56" stroke="rgba(255,255,255,0.05)" strokeWidth="8" />
+                    <circle cx="64" cy="64" fill="transparent" r="56" className="stroke-gray-100 dark:stroke-white/5" strokeWidth="8" />
                     <circle 
                       cx="64" cy="64" fill="transparent" r="56" 
                       stroke="#9fa7ff" 
@@ -673,12 +731,12 @@ export default function NewDashboard() {
                     <p className="text-2xl font-extrabold">{stats.totalEnrollments > 0 ? Math.floor(stats.avgProgress / 10) : 0}</p>
                     <p className="text-[10px] text-slate-500 uppercase font-bold">Day Streak</p>
                   </div>
-                  <div className="h-8 w-[1px] bg-white/10"></div>
+                  <div className="h-8 w-[1px] bg-gray-200 dark:bg-white/10"></div>
                   <div className="text-center">
                     <p className="text-2xl font-extrabold">{stats.studyHours * 10}</p>
                     <p className="text-[10px] text-slate-500 uppercase font-bold">XP</p>
                   </div>
-                  <div className="h-8 w-[1px] bg-white/10"></div>
+                  <div className="h-8 w-[1px] bg-gray-200 dark:bg-white/10"></div>
                   <div className="text-center">
                     <p className="text-2xl font-extrabold">{stats.completedCourses}</p>
                     <p className="text-[10px] text-slate-500 uppercase font-bold">Badges</p>
@@ -687,7 +745,7 @@ export default function NewDashboard() {
               </div>
 
               {/* Upcoming Deadlines */}
-              <div className="bg-[#091328] rounded-xl p-6 border border-white/5">
+              <div className="bg-white dark:bg-[#091328] rounded-xl p-6 border border-gray-200 dark:border-white/5 shadow-sm">
                 <h4 className="font-bold text-lg mb-6 flex items-center gap-2">
                   <Calendar className="w-5 h-5 text-[#c081ff]" />
                   Upcoming Deadlines
@@ -695,8 +753,8 @@ export default function NewDashboard() {
                 <div className="space-y-4">
                   {deadlines.map((deadline) => (
                     <div key={deadline.id} className="flex gap-4 group cursor-pointer">
-                      <div className="flex flex-col items-center justify-center w-12 h-14 bg-[#192540] rounded-lg border border-white/5">
-                        <span className="text-[10px] font-bold text-slate-500 uppercase">Oct</span>
+                      <div className="flex flex-col items-center justify-center w-12 h-14 bg-gray-50 dark:bg-[#192540] rounded-lg border border-gray-200 dark:border-white/5">
+                        <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase">Oct</span>
                         <span className="text-lg font-extrabold">{deadline.date.split(" ")[1]}</span>
                       </div>
                       <div className="flex-1">
@@ -716,14 +774,14 @@ export default function NewDashboard() {
                 </div>
                 <button 
                   onClick={() => navigate('/calendar')}
-                  className="w-full mt-6 py-3 bg-white/5 hover:bg-white/10 rounded-xl text-xs font-bold transition-all"
+                  className="w-full mt-6 py-3 bg-gray-50 dark:bg-white/5 hover:bg-gray-100 dark:hover:bg-white/10 text-gray-600 dark:text-white rounded-xl text-xs font-bold transition-all"
                 >
                   View Full Calendar
                 </button>
               </div>
 
               {/* Achievements */}
-              <div className="bg-[#192540]/60 rounded-xl p-6 border border-white/10 backdrop-blur-lg">
+              <div className="bg-indigo-50/50 dark:bg-[#192540]/60 rounded-xl p-6 border border-indigo-100 dark:border-white/10 backdrop-blur-lg">
                 <h4 className="font-bold text-lg mb-4">Achievements</h4>
                 <div className="flex flex-wrap gap-4">
                   {(() => {
@@ -804,7 +862,8 @@ export default function NewDashboard() {
               </div>
             </aside>
           </div>
-        </div>
+          </motion.div>
+        </AnimatePresence>
       </main>
       <AIChat courseTitle="Dashboard" courseContent="General learning assistance across all subjects" />
     </div>

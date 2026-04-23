@@ -22,7 +22,8 @@ import {
   Video,
   HelpCircle,
   Loader2,
-  ThumbsUp
+  ThumbsUp,
+  Sparkles
 } from 'lucide-react';
 import Sidebar from "../components/Sidebar";
 import AIChat from "../components/AIChat";
@@ -30,7 +31,8 @@ import { enrollmentAPI } from '../utils/api';
 
 // Production backend URL - FORCE CORRECT URL
 const PROD_API_URL = 'https://edunexa-lms-zx8q.onrender.com/api';
-const API_BASE_URL = PROD_API_URL; // Force production URL
+const LOCAL_API_URL = 'http://localhost:5000/api';
+const API_BASE_URL = window.location.hostname === 'localhost' ? LOCAL_API_URL : PROD_API_URL;
 const courseDataFallback = {
   1: {
     id: 1,
@@ -191,6 +193,7 @@ export default function CourseDetails() {
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [reviewForm, setReviewForm] = useState({ rating: 5, comment: '' });
   const [submittingReview, setSubmittingReview] = useState(false);
+  const [generatingSummary, setGeneratingSummary] = useState(false);
   
   useEffect(() => {
     fetchCourseDetails();
@@ -292,10 +295,31 @@ export default function CourseDetails() {
       setSubmittingReview(false);
     }
   };
+
+  const handleGenerateSummary = async () => {
+    try {
+      setGeneratingSummary(true);
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_BASE_URL}/ai/summarize-course/${id}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      });
+      
+      const data = await response.json();
+      if (data.success) {
+        setCourse(prev => ({ ...prev, aiSummary: data.summary }));
+      } else {
+        alert(data.message || 'Failed to generate summary');
+      }
+    } catch (err) {
+      alert('Error generating AI summary');
+    } finally {
+      setGeneratingSummary(false);
+    }
+  };
   
   if (loading) {
     return (
-      <div className="bg-[#060e20] text-[#dee5ff] min-h-screen flex items-center justify-center">
+      <div className="bg-white dark:bg-[#060e20] text-slate-900 dark:text-[#dee5ff] min-h-screen flex items-center justify-center transition-colors duration-200">
         <Sidebar />
         <main className="ml-64 flex-1 flex items-center justify-center">
           <Loader2 className="w-10 h-10 animate-spin text-[#5764f1]" />
@@ -306,7 +330,7 @@ export default function CourseDetails() {
   
   if (error || !course) {
     return (
-      <div className="bg-[#060e20] text-[#dee5ff] min-h-screen">
+      <div className="bg-white dark:bg-[#060e20] text-slate-900 dark:text-[#dee5ff] min-h-screen transition-colors duration-200">
         <Sidebar />
         <main className="ml-64 min-h-screen flex items-center justify-center">
           <div className="text-center">
@@ -329,7 +353,7 @@ export default function CourseDetails() {
   };
 
   return (
-    <div className="bg-[#060e20] text-[#dee5ff] min-h-screen">
+    <div className="bg-white dark:bg-[#060e20] text-slate-900 dark:text-[#dee5ff] min-h-screen transition-colors duration-200">
       <Sidebar />
       <main className="ml-64 min-h-screen">
         {/* Hero Section */}
@@ -337,9 +361,9 @@ export default function CourseDetails() {
           <img 
             src={course.image} 
             alt={course.title}
-            className="w-full h-full object-cover opacity-60"
+            className="w-full h-full object-cover opacity-60 dark:opacity-40"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#060e20] via-[#060e20]/80 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-white dark:from-[#060e20] via-white/80 dark:via-[#060e20]/80 to-transparent transition-colors duration-200" />
           
           <div className="absolute bottom-0 left-0 right-0 p-8">
             <div className="max-w-6xl mx-auto">
@@ -354,15 +378,15 @@ export default function CourseDetails() {
               <div className="flex items-start justify-between">
                 <div>
                   <div className="flex items-center gap-3 mb-3">
-                    <span className="px-3 py-1 bg-[#5764f1]/20 text-[#5764f1] text-xs font-bold rounded-full">
+                    <span className="px-3 py-1 bg-blue-100 dark:bg-[#5764f1]/20 text-blue-600 dark:text-[#5764f1] text-xs font-bold rounded-full">
                       {course.level}
                     </span>
-                    <span className="px-3 py-1 bg-green-500/20 text-green-400 text-xs font-bold rounded-full">
+                    <span className="px-3 py-1 bg-green-100 dark:bg-green-500/20 text-green-600 dark:text-green-400 text-xs font-bold rounded-full">
                       Bestseller
                     </span>
                   </div>
-                  <h1 className="text-4xl font-bold mb-2">{course.title}</h1>
-                  <p className="text-xl text-slate-400 mb-4">{course.subtitle}</p>
+                  <h1 className="text-4xl font-bold mb-2 text-gray-900 dark:text-white">{course.title}</h1>
+                  <p className="text-xl text-gray-600 dark:text-slate-400 mb-4">{course.subtitle}</p>
                   
                   <div className="flex items-center gap-6 text-sm">
                     <div className="flex items-center gap-1">
@@ -406,15 +430,15 @@ export default function CourseDetails() {
             {/* Main Content */}
             <div className="lg:col-span-2">
               {/* Tabs */}
-              <div className="flex gap-1 mb-6 bg-[#091328] p-1 rounded-xl">
+              <div className="flex gap-1 mb-6 bg-gray-100 dark:bg-[#091328] p-1 rounded-xl transition-colors duration-200">
                 {['overview', 'curriculum', 'reviews'].map((tab) => (
                   <button
                     key={tab}
                     onClick={() => setActiveTab(tab)}
                     className={`flex-1 py-3 px-4 rounded-lg font-medium capitalize transition ${
                       activeTab === tab 
-                        ? 'bg-[#5764f1] text-white' 
-                        : 'text-slate-400 hover:text-white hover:bg-white/5'
+                        ? 'bg-[#5764f1] text-white shadow-lg shadow-blue-500/20' 
+                        : 'text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white hover:bg-white/5'
                     }`}
                   >
                     {tab}
@@ -424,33 +448,69 @@ export default function CourseDetails() {
 
               {activeTab === 'overview' && (
                 <div className="space-y-8">
+                  {/* AI Summary Section */}
+                  <div className="bg-gradient-to-br from-blue-50 dark:from-[#121b3a] to-white dark:to-[#091328] rounded-2xl p-6 border border-blue-200 dark:border-[#5764f1]/30 shadow-lg dark:shadow-[0_0_20px_rgba(87,100,241,0.1)] transition-colors duration-200">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-2">
+                        <Sparkles className="w-5 h-5 text-[#5764f1]" />
+                        <h2 className="text-xl font-bold text-gray-900 dark:text-white">AI Learning Summary</h2>
+                      </div>
+                      {!course.aiSummary && (
+                        <button
+                          onClick={handleGenerateSummary}
+                          disabled={generatingSummary}
+                          className="px-4 py-2 bg-[#5764f1] hover:bg-[#4652e0] text-white text-xs font-bold rounded-lg transition flex items-center gap-2 disabled:opacity-50"
+                        >
+                          {generatingSummary ? (
+                            <Loader2 className="w-3 h-3 animate-spin" />
+                          ) : (
+                            <Sparkles className="w-3 h-3" />
+                          )}
+                          Generate Summary
+                        </button>
+                      )}
+                    </div>
+                    
+                    {course.aiSummary ? (
+                      <div className="prose prose-invert max-w-none">
+                        <div className="text-gray-700 dark:text-slate-300 whitespace-pre-wrap text-sm leading-relaxed">
+                          {course.aiSummary}
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-gray-500 dark:text-slate-400 text-sm italic">
+                        Generate an AI summary to get a quick overview of what you'll achieve in this course.
+                      </p>
+                    )}
+                  </div>
+
                   {/* Description */}
-                  <div className="bg-[#091328] rounded-2xl p-6 border border-white/5">
-                    <h2 className="text-xl font-bold mb-4">Description</h2>
-                    <p className="text-slate-400 leading-relaxed">{course.description}</p>
+                  <div className="bg-white dark:bg-[#091328] rounded-2xl p-6 border border-gray-100 dark:border-white/5 transition-colors duration-200 shadow-sm">
+                    <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">Description</h2>
+                    <p className="text-gray-600 dark:text-slate-400 leading-relaxed">{course.description}</p>
                   </div>
 
                   {/* What You'll Learn */}
-                  <div className="bg-[#091328] rounded-2xl p-6 border border-white/5">
-                    <h2 className="text-xl font-bold mb-4">What you'll learn</h2>
+                  <div className="bg-white dark:bg-[#091328] rounded-2xl p-6 border border-gray-100 dark:border-white/5 transition-colors duration-200 shadow-sm">
+                    <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">What you'll learn</h2>
                     <div className="grid grid-cols-2 gap-4">
                       {course.whatYouWillLearn.map((item, index) => (
                         <div key={index} className="flex items-start gap-3">
-                          <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
-                          <span className="text-sm text-slate-300">{item}</span>
+                          <CheckCircle className="w-5 h-5 text-green-500 dark:text-green-400 flex-shrink-0 mt-0.5" />
+                          <span className="text-sm text-gray-700 dark:text-slate-300">{item}</span>
                         </div>
                       ))}
                     </div>
                   </div>
 
                   {/* Topics */}
-                  <div className="bg-[#091328] rounded-2xl p-6 border border-white/5">
-                    <h2 className="text-xl font-bold mb-4">Topics covered</h2>
+                  <div className="bg-white dark:bg-[#091328] rounded-2xl p-6 border border-gray-100 dark:border-white/5 transition-colors duration-200 shadow-sm">
+                    <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">Topics covered</h2>
                     <div className="flex flex-wrap gap-2">
                       {course.topics.map((topic) => (
                         <span 
                           key={topic}
-                          className="px-4 py-2 bg-[#192540] rounded-lg text-sm text-slate-300"
+                          className="px-4 py-2 bg-gray-100 dark:bg-[#192540] rounded-lg text-sm text-gray-700 dark:text-slate-300 border border-gray-200 dark:border-white/5"
                         >
                           {topic}
                         </span>
@@ -461,11 +521,11 @@ export default function CourseDetails() {
               )}
 
               {activeTab === 'curriculum' && (
-                <div className="bg-[#091328] rounded-2xl border border-white/5 overflow-hidden">
-                  <div className="p-6 border-b border-white/5">
+                <div className="bg-white dark:bg-[#091328] rounded-2xl border border-gray-200 dark:border-white/5 overflow-hidden shadow-sm transition-colors duration-200">
+                  <div className="p-6 border-b border-gray-200 dark:border-white/5">
                     <div className="flex justify-between items-center">
-                      <h2 className="text-xl font-bold">Course Content</h2>
-                      <div className="text-sm text-slate-400">
+                      <h2 className="text-xl font-bold text-gray-900 dark:text-white">Course Content</h2>
+                      <div className="text-sm text-gray-500 dark:text-slate-400">
                         {course.curriculum.length} sections • {course.lectures} lectures • {course.duration} total
                       </div>
                     </div>
@@ -476,16 +536,16 @@ export default function CourseDetails() {
                       <div key={sectionIndex}>
                         <button
                           onClick={() => toggleSection(sectionIndex)}
-                          className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition"
+                          className="w-full flex items-center justify-between p-4 hover:bg-gray-50 dark:hover:bg-white/5 transition"
                         >
                           <div className="flex items-center gap-3">
                             {expandedSection === sectionIndex ? 
-                              <ChevronUp className="w-5 h-5 text-slate-400" /> : 
-                              <ChevronDown className="w-5 h-5 text-slate-400" />
+                              <ChevronUp className="w-5 h-5 text-gray-500 dark:text-slate-400" /> : 
+                              <ChevronDown className="w-5 h-5 text-gray-500 dark:text-slate-400" />
                             }
-                            <span className="font-medium text-left">{section.section}</span>
+                            <span className="font-medium text-left text-gray-900 dark:text-white">{section.section}</span>
                           </div>
-                          <span className="text-sm text-slate-500">{section.duration}</span>
+                          <span className="text-sm text-gray-500 dark:text-slate-500">{section.duration}</span>
                         </button>
                         
                         {expandedSection === sectionIndex && (
@@ -520,7 +580,7 @@ export default function CourseDetails() {
 
               {activeTab === 'reviews' && (
                 <div className="space-y-4">
-                  <div className="bg-[#091328] rounded-2xl p-6 border border-white/5">
+                  <div className="bg-white dark:bg-[#091328] rounded-2xl p-6 border border-gray-200 dark:border-white/5 shadow-sm transition-colors duration-200">
                     <div className="flex items-center gap-8 mb-6">
                       <div className="text-center">
                         <p className="text-5xl font-bold text-yellow-400">{(reviewsData.rating || 0).toFixed(1)}</p>
@@ -552,7 +612,7 @@ export default function CourseDetails() {
                     {/* Add Review Button */}
                     <button
                       onClick={() => setShowReviewForm(!showReviewForm)}
-                      className="w-full py-3 bg-[#192540] text-white rounded-xl font-medium hover:bg-[#253550] transition flex items-center justify-center gap-2"
+                      className="w-full py-3 bg-gray-100 dark:bg-[#192540] text-gray-900 dark:text-white rounded-xl font-medium hover:bg-gray-200 dark:hover:bg-[#253550] transition flex items-center justify-center gap-2 border border-gray-200 dark:border-white/5"
                     >
                       <ThumbsUp className="w-4 h-4" />
                       {showReviewForm ? 'Cancel Review' : 'Write a Review'}
@@ -589,7 +649,7 @@ export default function CourseDetails() {
                         <button
                           type="submit"
                           disabled={submittingReview}
-                          className="w-full py-3 bg-gradient-to-r from-[#5764f1] to-[#c081ff] text-white rounded-xl font-medium hover:shadow-lg transition disabled:opacity-50"
+                          className="w-full py-3 bg-gradient-to-r from-blue-600 to-blue-700 dark:from-[#5764f1] dark:to-[#c081ff] text-white rounded-xl font-medium hover:shadow-lg transition disabled:opacity-50"
                         >
                           {submittingReview ? 'Submitting...' : 'Submit Review'}
                         </button>
@@ -625,7 +685,7 @@ export default function CourseDetails() {
                             </div>
                           </div>
                         </div>
-                        <p className="text-slate-300">{review.comment}</p>
+                        <p className="text-gray-700 dark:text-slate-300">{review.comment}</p>
                       </div>
                     ))
                   )}
@@ -643,7 +703,7 @@ export default function CourseDetails() {
             <div className="lg:col-span-1">
               <div className="sticky top-8 space-y-6">
                 {/* Enroll Card */}
-                <div className="bg-[#091328] rounded-2xl p-6 border border-white/5">
+                <div className="bg-white dark:bg-[#091328] rounded-2xl p-6 border border-gray-200 dark:border-white/5 shadow-sm transition-colors duration-200">
                   <div className="flex items-center gap-4 mb-6">
                     <img 
                       src={course.instructor.image} 
@@ -664,7 +724,7 @@ export default function CourseDetails() {
                   <button 
                     onClick={handleEnroll}
                     disabled={enrolling || enrollSuccess}
-                    className="w-full py-4 bg-gradient-to-r from-[#5764f1] to-[#c081ff] text-white rounded-xl font-bold text-lg hover:shadow-[0_0_30px_rgba(87,100,241,0.5)] transition mb-4 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full py-4 bg-gradient-to-r from-blue-600 to-blue-700 dark:from-[#5764f1] dark:to-[#c081ff] text-white rounded-xl font-bold text-lg hover:shadow-xl dark:hover:shadow-[0_0_30px_rgba(87,100,241,0.5)] transition mb-4 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {enrolling ? (
                       <span className="flex items-center justify-center gap-2">
@@ -681,7 +741,7 @@ export default function CourseDetails() {
                     )}
                   </button>
                   
-                  <button className="w-full py-3 border border-white/20 text-white rounded-xl font-medium hover:bg-white/5 transition">
+                  <button className="w-full py-3 border border-gray-200 dark:border-white/20 text-gray-700 dark:text-white rounded-xl font-medium hover:bg-gray-50 dark:hover:bg-white/5 transition">
                     Start Free Preview
                   </button>
 
@@ -714,7 +774,7 @@ export default function CourseDetails() {
                 </div>
 
                 {/* This Course Includes */}
-                <div className="bg-[#091328] rounded-2xl p-6 border border-white/5">
+                <div className="bg-white dark:bg-[#091328] rounded-2xl p-6 border border-gray-200 dark:border-white/5 shadow-sm transition-colors duration-200">
                   <h3 className="font-bold mb-4">This course includes:</h3>
                   <div className="space-y-3">
                     <div className="flex items-center gap-3 text-sm">

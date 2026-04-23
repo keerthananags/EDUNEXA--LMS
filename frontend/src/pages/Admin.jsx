@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { 
@@ -23,8 +24,13 @@ import {
   ChevronRight,
   MoreHorizontal,
   Bell,
-  UserPlus
+  UserPlus,
+  Loader2,
+  AlertCircle,
+  RefreshCcw
 } from 'lucide-react';
+import { toast } from 'react-toastify';
+import Skeleton from '../components/Skeleton';
 
 // Production backend URL - FORCE CORRECT URL
 const PROD_API_URL = 'https://edunexa-lms-zx8q.onrender.com/api';
@@ -39,6 +45,23 @@ const Admin = () => {
   const [enrollments, setEnrollments] = useState([]);
   const [stats, setStats] = useState({});
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [roleFilter, setRoleFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 8;
+
+  // Debounce search term
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(searchTerm), 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  // Reset page on filter change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearch, roleFilter, statusFilter, activeTab]);
+
   const [showAddUserModal, setShowAddUserModal] = useState(false);
   const [showAddCourseModal, setShowAddCourseModal] = useState(false);
   const [showReportsModal, setShowReportsModal] = useState(false);
@@ -46,6 +69,8 @@ const Admin = () => {
   const [newUser, setNewUser] = useState({ name: '', email: '', password: '', role: 'student' });
   const [newCourse, setNewCourse] = useState({ title: '', description: '', category: 'Development', level: 'beginner', price: 0 });
   const [assignCourse, setAssignCourse] = useState({ userId: '', courseId: '' });
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     fetchAdminData();
@@ -61,6 +86,8 @@ const Admin = () => {
 
   const fetchAdminData = async () => {
     try {
+      setIsLoading(true);
+      setError(null);
       const token = localStorage.getItem('token');
       
       if (!token) {
@@ -73,10 +100,8 @@ const Admin = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      if (statsRes.status === 401) {
-        handleUnauthorized();
-        return;
-      }
+      if (statsRes.status === 401) return handleUnauthorized();
+      if (!statsRes.ok) throw new Error("Failed to fetch stats");
       
       const statsData = await statsRes.json();
       setStats(statsData);
@@ -86,11 +111,7 @@ const Admin = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      if (usersRes.status === 401) {
-        handleUnauthorized();
-        return;
-      }
-
+      if (usersRes.status === 401) return handleUnauthorized();
       if (!usersRes.ok) throw new Error("Failed to fetch users");
 
       const usersData = await usersRes.json();
@@ -101,11 +122,7 @@ const Admin = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      if (coursesRes.status === 401) {
-        handleUnauthorized();
-        return;
-      }
-
+      if (coursesRes.status === 401) return handleUnauthorized();
       if (!coursesRes.ok) throw new Error("Failed to fetch courses");
 
       const coursesData = await coursesRes.json();
@@ -113,6 +130,10 @@ const Admin = () => {
 
     } catch (error) {
       console.error("❌ Failed to fetch admin data:", error);
+      setError(error.message);
+      toast.error(error.message);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -369,34 +390,192 @@ const Admin = () => {
     }
   };
 
+  const getUserEnrollmentCount = (userId) => {
+    return Array.isArray(enrollments) ? enrollments.filter(e => (e.user?._id || e.user) === userId).length : 0;
+  };
+
+  const getUserAverageProgress = (userId) => {
+    const userEnrollments = Array.isArray(enrollments) ? enrollments.filter(e => (e.user?._id || e.user) === userId) : [];
+    if (userEnrollments.length === 0) return 0;
+    const totalProgress = userEnrollments.reduce((acc, e) => acc + (e.progress || 0), 0);
+    return Math.round(totalProgress / userEnrollments.length);
+  };
+
+  // SAFE DATA HANDLING: Filtered and Paginated Users
+  const filteredUsers = Array.isArray(users) ? users.filter(u => {
+    const matchesSearch = (u.name?.toLowerCase().includes(debouncedSearch.toLowerCase()) || 
+                          u.email?.toLowerCase().includes(debouncedSearch.toLowerCase()));
+    const matchesRole = roleFilter === 'all' || u.role === roleFilter;
+    return matchesSearch && matchesRole;
+  }) : [];
+
+  const paginatedUsers = filteredUsers.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  // SAFE DATA HANDLING: Filtered and Paginated Courses
+  const filteredCourses = Array.isArray(courses) ? courses.filter(c => {
+    const matchesSearch = c.title?.toLowerCase().includes(debouncedSearch.toLowerCase()) || 
+                          c.description?.toLowerCase().includes(debouncedSearch.toLowerCase());
+    const matchesStatus = statusFilter === 'all' || (statusFilter === 'published' ? c.isPublished : !c.isPublished);
+    return matchesSearch && matchesStatus;
+  }) : [];
+
+  const paginatedCourses = filteredCourses.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  // SAFE DATA HANDLING: Filtered and Paginated Enrollments
+  const filteredEnrollments = Array.isArray(enrollments) ? enrollments.filter(e => {
+    const matchesSearch = e.user?.name?.toLowerCase().includes(debouncedSearch.toLowerCase()) || 
+                          e.course?.title?.toLowerCase().includes(debouncedSearch.toLowerCase());
+    return matchesSearch;
+  }) : [];
+
+  const paginatedEnrollments = filteredEnrollments.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  const totalPages = Math.ceil(
+    (activeTab === 'users' ? filteredUsers.length : 
+     activeTab === 'courses' ? filteredCourses.length : 
+     filteredEnrollments.length) / itemsPerPage
+  );
+
+  const Pagination = () => {
+    if (totalPages <= 1) return null;
+    return (
+      <div className="flex items-center justify-between mt-6 px-2">
+        <p className="text-sm text-slate-400">
+          Showing <span className="text-white font-medium">{(currentPage - 1) * itemsPerPage + 1}</span> to <span className="text-white font-medium">{Math.min(currentPage * itemsPerPage, (activeTab === 'users' ? filteredUsers.length : activeTab === 'courses' ? filteredCourses.length : filteredEnrollments.length))}</span> of <span className="text-white font-medium">{(activeTab === 'users' ? filteredUsers.length : activeTab === 'courses' ? filteredCourses.length : filteredEnrollments.length)}</span> results
+        </p>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+            disabled={currentPage === 1}
+            className="px-4 py-2 bg-[#0f1930] border border-white/10 rounded-lg text-sm text-white disabled:opacity-50 hover:bg-white/5 transition"
+          >
+            Previous
+          </button>
+          <button
+            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+            disabled={currentPage === totalPages}
+            className="px-4 py-2 bg-[#0f1930] border border-white/10 rounded-lg text-sm text-white disabled:opacity-50 hover:bg-white/5 transition"
+          >
+            Next
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-[#060e20] text-slate-900 dark:text-[#dee5ff]">
+        <div className="p-8 max-w-7xl mx-auto">
+          <div className="flex justify-between items-center mb-8">
+            <div className="space-y-2">
+              <Skeleton className="h-10 w-48" />
+              <Skeleton className="h-4 w-64" />
+            </div>
+            <div className="flex gap-4">
+              <Skeleton className="h-10 w-10 rounded-xl" />
+              <Skeleton className="h-10 w-32 rounded-xl" />
+              <Skeleton className="h-10 w-10 rounded-xl" />
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            {[1, 2, 3, 4].map(i => (
+              <div key={i} className="bg-white dark:bg-[#091328] rounded-2xl p-6 border border-gray-200 dark:border-white/5">
+                <div className="flex justify-between mb-4">
+                  <Skeleton className="h-12 w-12 rounded-xl" />
+                  <Skeleton className="h-4 w-12 rounded-full" />
+                </div>
+                <Skeleton className="h-8 w-24 mb-2" />
+                <Skeleton className="h-4 w-32" />
+              </div>
+            ))}
+          </div>
+
+          <div className="bg-white dark:bg-[#091328] rounded-2xl p-6 border border-gray-200 dark:border-white/5 shadow-sm mb-8">
+            <Skeleton className="h-8 w-48 mb-6" />
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-24 w-full rounded-xl" />)}
+            </div>
+          </div>
+
+          <div className="bg-white dark:bg-[#091328] rounded-2xl p-6 border border-gray-200 dark:border-white/5 shadow-sm">
+            <Skeleton className="h-8 w-48 mb-6" />
+            <div className="space-y-4">
+              {[1, 2, 3, 4, 5].map(i => (
+                <div key={i} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-[#0f1930] rounded-xl border border-white/5">
+                  <div className="flex items-center gap-3">
+                    <Skeleton className="w-10 h-10 rounded-lg" />
+                    <div>
+                      <Skeleton className="h-4 w-32 mb-2" />
+                      <Skeleton className="h-3 w-48" />
+                    </div>
+                  </div>
+                  <Skeleton className="h-6 w-16 rounded-full" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-[#050b14] flex flex-col items-center justify-center p-4">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white dark:bg-[#091328] rounded-3xl p-8 max-w-md w-full shadow-2xl flex flex-col items-center gap-6 border border-red-500/20"
+        >
+          <div className="w-16 h-16 bg-red-500/10 rounded-2xl flex items-center justify-center">
+            <AlertCircle className="w-10 h-10 text-red-500" />
+          </div>
+          <div className="text-center">
+            <h2 className="text-2xl font-bold mb-2">Something went wrong</h2>
+            <p className="text-slate-500 text-sm mb-6">{error}</p>
+            <button 
+              onClick={fetchAdminData}
+              className="flex items-center justify-center gap-2 w-full px-6 py-3 bg-[#5764f1] text-white rounded-xl font-bold hover:bg-[#4652e0] transition-colors"
+            >
+              <RefreshCcw className="w-5 h-5" />
+              Try Again
+            </button>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-[#050b14] text-white">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#050b14] text-gray-900 dark:text-white transition-colors duration-200">
       {/* Main Content */}
       <main className="flex-1 p-8 overflow-y-auto">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="flex items-center justify-between mb-8">
             <div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">Admin Dashboard</h1>
-              <p className="text-slate-400 mt-1">Welcome back, {user?.name || 'Admin'}</p>
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-500 dark:from-white dark:to-slate-400 bg-clip-text text-transparent">Admin Dashboard</h1>
+              <p className="text-slate-500 dark:text-slate-400 mt-1">Welcome back, {user?.name || 'Admin'}</p>
             </div>
             <div className="flex items-center gap-4">
-              <button className="p-3 bg-[#091328] rounded-xl border border-white/5 hover:bg-[#0f1930] transition relative">
+              <button className="p-3 bg-white dark:bg-[#091328] rounded-xl border border-gray-200 dark:border-white/5 hover:bg-gray-50 dark:hover:bg-[#0f1930] transition relative">
                 <Bell className="w-5 h-5 text-slate-400" />
                 <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full"></span>
               </button>
-              <div className="flex items-center gap-3 px-4 py-2 bg-[#091328] rounded-xl border border-white/5">
+              <div className="flex items-center gap-3 px-4 py-2 bg-white dark:bg-[#091328] rounded-xl border border-gray-200 dark:border-white/5">
                 <div className="w-10 h-10 bg-gradient-to-br from-[#5764f1] to-[#c081ff] rounded-lg flex items-center justify-center">
                   <UserIcon className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <p className="font-medium text-sm">{user?.name || 'Admin'}</p>
-                  <p className="text-xs text-slate-400">Administrator</p>
+                  <p className="font-medium text-sm text-gray-900 dark:text-white">{user?.name || 'Admin'}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">Administrator</p>
                 </div>
               </div>
               <button
                 onClick={handleLogout}
-                className="p-3 bg-[#091328] rounded-xl border border-white/5 hover:bg-red-500/20 hover:border-red-500/30 transition text-slate-400 hover:text-red-400"
+                className="p-3 bg-white dark:bg-[#091328] rounded-xl border border-gray-200 dark:border-white/5 hover:bg-red-500/10 dark:hover:bg-red-500/20 hover:border-red-500/30 transition text-slate-400 hover:text-red-400"
                 title="Logout"
               >
                 <LogOut className="w-5 h-5" />
@@ -404,11 +583,22 @@ const Admin = () => {
             </div>
           </div>
 
+          <AnimatePresence mode="wait">
           {activeTab === 'dashboard' && (
+            <motion.div
+              key="dashboard"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+            >
             <>
               {/* Stats Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                <div className="bg-[#091328] rounded-2xl p-6 border border-white/5 hover:border-[#5764f1]/30 transition group">
+                <div 
+                  onClick={() => setActiveTab('users')}
+                  className="bg-white dark:bg-[#091328] rounded-2xl p-6 border border-gray-200 dark:border-white/5 shadow-sm hover:border-[#5764f1]/30 transition group cursor-pointer"
+                >
                   <div className="flex items-start justify-between mb-4">
                     <div className="w-12 h-12 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 rounded-xl flex items-center justify-center">
                       <Users className="w-6 h-6 text-cyan-400" />
@@ -418,16 +608,16 @@ const Admin = () => {
                       +12%
                     </span>
                   </div>
-                  <p className="text-3xl font-bold text-white mb-1">{stats.stats?.totalUsers || '0'}</p>
-                  <p className="text-sm text-slate-400">Total Users</p>
-                  <div className="mt-4 h-1 bg-[#192540] rounded-full overflow-hidden">
+                  <p className="text-3xl font-bold text-gray-900 dark:text-white mb-1">{stats.stats?.totalUsers || '0'}</p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">Total Users</p>
+                  <div className="mt-4 h-1 bg-gray-100 dark:bg-[#192540] rounded-full overflow-hidden">
                     <div className="h-full bg-gradient-to-r from-cyan-400 to-blue-500 w-[75%] rounded-full" />
                   </div>
                 </div>
                 
                 <div 
                   onClick={() => setActiveTab('courses')}
-                  className="bg-[#091328] rounded-2xl p-6 border border-white/5 hover:border-[#5764f1]/30 transition group cursor-pointer"
+                  className="bg-white dark:bg-[#091328] rounded-2xl p-6 border border-gray-200 dark:border-white/5 shadow-sm hover:border-[#5764f1]/30 transition group cursor-pointer"
                 >
                   <div className="flex items-start justify-between mb-4">
                     <div className="w-12 h-12 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-xl flex items-center justify-center">
@@ -438,16 +628,16 @@ const Admin = () => {
                       +5%
                     </span>
                   </div>
-                  <p className="text-3xl font-bold text-white mb-1">{stats.stats?.totalCourses || '0'}</p>
-                  <p className="text-sm text-slate-400">Total Courses</p>
-                  <div className="mt-4 h-1 bg-[#192540] rounded-full overflow-hidden">
+                  <p className="text-3xl font-bold text-gray-900 dark:text-white mb-1">{stats.stats?.totalCourses || '0'}</p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">Total Courses</p>
+                  <div className="mt-4 h-1 bg-gray-100 dark:bg-[#192540] rounded-full overflow-hidden">
                     <div className="h-full bg-gradient-to-r from-purple-400 to-pink-500 w-[60%] rounded-full" />
                   </div>
                 </div>
                 
                 <div 
                   onClick={() => setActiveTab('enrollments')}
-                  className="bg-[#091328] rounded-2xl p-6 border border-white/5 hover:border-[#5764f1]/30 transition group cursor-pointer"
+                  className="bg-white dark:bg-[#091328] rounded-2xl p-6 border border-gray-200 dark:border-white/5 shadow-sm hover:border-[#5764f1]/30 transition group cursor-pointer"
                 >
                   <div className="flex items-start justify-between mb-4">
                     <div className="w-12 h-12 bg-gradient-to-br from-green-500/20 to-emerald-500/20 rounded-xl flex items-center justify-center">
@@ -458,14 +648,14 @@ const Admin = () => {
                       +18%
                     </span>
                   </div>
-                  <p className="text-3xl font-bold text-white mb-1">{stats.stats?.totalEnrollments || '0'}</p>
-                  <p className="text-sm text-slate-400">Enrollments</p>
-                  <div className="mt-4 h-1 bg-[#192540] rounded-full overflow-hidden">
+                  <p className="text-3xl font-bold text-gray-900 dark:text-white mb-1">{stats.stats?.totalEnrollments || '0'}</p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">Enrollments</p>
+                  <div className="mt-4 h-1 bg-gray-100 dark:bg-[#192540] rounded-full overflow-hidden">
                     <div className="h-full bg-gradient-to-r from-green-400 to-emerald-500 w-[85%] rounded-full" />
                   </div>
                 </div>
                 
-                <div className="bg-[#091328] rounded-2xl p-6 border border-white/5 hover:border-[#5764f1]/30 transition group">
+                <div className="bg-white dark:bg-[#091328] rounded-2xl p-6 border border-gray-200 dark:border-white/5 shadow-sm hover:border-[#5764f1]/30 transition group">
                   <div className="flex items-start justify-between mb-4">
                     <div className="w-12 h-12 bg-gradient-to-br from-orange-500/20 to-yellow-500/20 rounded-xl flex items-center justify-center">
                       <Award className="w-6 h-6 text-orange-400" />
@@ -475,16 +665,16 @@ const Admin = () => {
                       +8%
                     </span>
                   </div>
-                  <p className="text-3xl font-bold text-white mb-1">{stats.stats?.publishedCourses || '0'}</p>
-                  <p className="text-sm text-slate-400">Published</p>
-                  <div className="mt-4 h-1 bg-[#192540] rounded-full overflow-hidden">
+                  <p className="text-3xl font-bold text-gray-900 dark:text-white mb-1">{stats.stats?.publishedCourses || '0'}</p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">Published</p>
+                  <div className="mt-4 h-1 bg-gray-100 dark:bg-[#192540] rounded-full overflow-hidden">
                     <div className="h-full bg-gradient-to-r from-orange-400 to-yellow-500 w-[92%] rounded-full" />
                   </div>
                 </div>
               </div>
 
               {/* Quick Actions */}
-              <div className="bg-[#091328] rounded-2xl p-6 border border-white/5 mb-8">
+              <div className="bg-white dark:bg-[#091328] rounded-2xl p-6 border border-gray-200 dark:border-white/5 shadow-sm mb-8">
                 <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
                   <Zap className="w-5 h-5 text-yellow-400" />
                   Quick Actions
@@ -531,10 +721,18 @@ const Admin = () => {
 
               {/* Recent Users */}
               <div className="bg-[#091328] rounded-2xl p-6 border border-white/5">
-                <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-                  <Users className="w-5 h-5 text-[#5764f1]" />
-                  Recent Users
-                </h2>
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-xl font-bold flex items-center gap-2">
+                    <Users className="w-5 h-5 text-[#5764f1]" />
+                    Recent Users
+                  </h2>
+                  <button 
+                    onClick={() => setActiveTab('users')}
+                    className="text-sm text-[#5764f1] hover:underline flex items-center gap-1"
+                  >
+                    View All <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
                 <div className="space-y-3">
                   {stats.recentUsers?.slice(0, 5).map((u) => (
                     <div key={u._id} className="flex items-center justify-between p-4 bg-[#0f1930] rounded-xl border border-white/5 hover:border-[#5764f1]/30 transition">
@@ -559,10 +757,18 @@ const Admin = () => {
                 </div>
               </div>
             </>
+            </motion.div>
           )}
 
           {activeTab === 'users' && (
-            <div className="bg-[#091328] rounded-2xl border border-white/5 p-6">
+            <motion.div
+              key="users"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+              className="bg-white dark:bg-[#091328] rounded-2xl border border-gray-200 dark:border-white/5 p-6 shadow-sm"
+            >
               <div className="flex justify-between items-center mb-6">
                 <div>
                   <h2 className="text-xl font-bold text-white flex items-center gap-2">
@@ -580,15 +786,27 @@ const Admin = () => {
                 </button>
               </div>
 
-              <div className="relative mb-6">
-                <Search className="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
-                <input
-                  type="text"
-                  placeholder="Search users..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-12 pr-4 py-3 bg-[#0f1930] border border-white/10 rounded-xl focus:ring-2 focus:ring-[#5764f1] focus:border-transparent text-white placeholder-slate-400"
-                />
+              <div className="flex flex-col md:flex-row gap-4 mb-6">
+                <div className="relative flex-1">
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                  <input
+                    type="text"
+                    placeholder="Search users by name or email..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-12 pr-4 py-3 bg-[#0f1930] border border-white/10 rounded-xl focus:ring-2 focus:ring-[#5764f1] focus:border-transparent text-white placeholder-slate-400 outline-none"
+                  />
+                </div>
+                <select
+                  value={roleFilter}
+                  onChange={(e) => setRoleFilter(e.target.value)}
+                  className="px-4 py-3 bg-[#0f1930] border border-white/10 rounded-xl text-white text-sm outline-none focus:ring-2 focus:ring-[#5764f1]"
+                >
+                  <option value="all">All Roles</option>
+                  <option value="admin">Admins</option>
+                  <option value="instructor">Instructors</option>
+                  <option value="student">Students</option>
+                </select>
               </div>
 
               <div className="overflow-x-auto">
@@ -602,7 +820,7 @@ const Admin = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredUsers.map((u) => (
+                    {paginatedUsers.map((u) => (
                       <tr key={u._id} className="border-b border-white/5 hover:bg-[#0f1930] transition">
                         <td className="py-3 px-4">
                           <div className="flex items-center gap-3">
@@ -637,11 +855,19 @@ const Admin = () => {
                   </tbody>
                 </table>
               </div>
-            </div>
+              <Pagination />
+            </motion.div>
           )}
 
           {activeTab === 'courses' && (
-            <div className="bg-[#091328] rounded-2xl border border-white/5 p-6">
+            <motion.div
+              key="courses"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+              className="bg-white dark:bg-[#091328] rounded-2xl border border-gray-200 dark:border-white/5 p-6 shadow-sm"
+            >
               <div className="flex justify-between items-center mb-6">
                 <div>
                   <h2 className="text-xl font-bold text-white flex items-center gap-2">
@@ -658,33 +884,62 @@ const Admin = () => {
                   Add Course
                 </button>
               </div>
+              <div className="flex flex-col md:flex-row gap-4 mb-6">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                  <input
+                    type="text"
+                    placeholder="Search courses..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2 bg-[#0f1930] border border-white/10 rounded-xl focus:ring-2 focus:ring-[#5764f1] outline-none text-white transition"
+                  />
+                </div>
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="px-4 py-2 bg-[#0f1930] border border-white/10 rounded-xl text-white text-sm outline-none focus:ring-2 focus:ring-[#5764f1]"
+                >
+                  <option value="all">All Status</option>
+                  <option value="published">Published</option>
+                  <option value="draft">Drafts</option>
+                </select>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {courses.map((course) => (
+                {paginatedCourses.map((course) => (
                   <div key={course._id} className="bg-[#0f1930] rounded-xl p-5 border border-white/5 hover:border-[#5764f1]/30 transition group">
-                    <div className="flex justify-between items-start mb-3">
-                      <h3 className="font-bold text-white text-lg">{course.title || 'Course'}</h3>
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${course.isPublished ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'}`}>
+                    <div className="flex justify-between items-start mb-4">
+                      <div className="w-12 h-12 bg-[#5764f1]/10 rounded-xl flex items-center justify-center text-[#5764f1]">
+                        <BookOpen className="w-6 h-6" />
+                      </div>
+                      <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                        course.isPublished ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'
+                      }`}>
                         {course.isPublished ? 'Published' : 'Draft'}
                       </span>
                     </div>
-                    <p className="text-sm text-slate-400 mb-4 line-clamp-2">{course.description || 'No description available'}</p>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 text-sm text-slate-400">
-                        <Users className="w-4 h-4" />
-                        {course.enrolledStudents?.length || 0} students
+                    <h3 className="font-bold text-white mb-2 line-clamp-1">{course.title}</h3>
+                    <p className="text-slate-400 text-sm mb-4 line-clamp-2">{course.description}</p>
+                    <div className="flex items-center justify-between pt-4 border-t border-white/5">
+                      <div className="flex items-center gap-2">
+                        <div className="flex -space-x-2">
+                          {[1, 2, 3].map(i => (
+                            <div key={i} className="w-6 h-6 rounded-full border-2 border-[#0f1930] bg-slate-700 flex items-center justify-center text-[8px] text-white">
+                              {i}
+                            </div>
+                          ))}
+                        </div>
+                        <span className="text-xs text-slate-500">{enrollments.filter(e => (e.course?._id || e.course) === course._id).length} Enrolled</span>
                       </div>
                       <div className="flex gap-2">
-                        <button
-                          onClick={() => handleTogglePublishCourse(course._id, course.isPublished)}
-                          className={`p-2 rounded-lg transition border ${course.isPublished ? 'text-yellow-400 hover:bg-yellow-500/10 border-transparent hover:border-yellow-500/30' : 'text-green-400 hover:bg-green-500/10 border-transparent hover:border-green-500/30'}`}
-                          title={course.isPublished ? 'Unpublish Course' : 'Publish Course'}
-                        >
+                        <button className="p-2 text-slate-400 hover:text-white transition">
                           {course.isPublished ? (
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
                             </svg>
                           ) : (
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                             </svg>
@@ -701,11 +956,19 @@ const Admin = () => {
                   </div>
                 ))}
               </div>
-            </div>
+              <Pagination />
+            </motion.div>
           )}
 
           {activeTab === 'enrollments' && (
-            <div className="bg-[#091328] rounded-2xl border border-white/5 p-6">
+            <motion.div
+              key="enrollments"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+              className="bg-white dark:bg-[#091328] rounded-2xl border border-gray-200 dark:border-white/5 p-6 shadow-sm"
+            >
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-bold text-white flex items-center gap-2">
                   <Activity className="w-5 h-5 text-[#5764f1]" />
@@ -720,6 +983,17 @@ const Admin = () => {
                 </button>
               </div>
               
+              <div className="relative mb-6">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                <input
+                  type="text"
+                  placeholder="Search enrollments by student or course..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 bg-[#0f1930] border border-white/10 rounded-xl focus:ring-2 focus:ring-[#5764f1] outline-none text-white transition"
+                />
+              </div>
+
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
@@ -732,7 +1006,7 @@ const Admin = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/5">
-                    {enrollments.map((enrollment) => (
+                    {paginatedEnrollments.map((enrollment) => (
                       <tr key={enrollment._id} className="hover:bg-white/5 transition">
                         <td className="py-3 px-4">
                           <div className="flex items-center gap-3">
@@ -776,7 +1050,7 @@ const Admin = () => {
                   </tbody>
                 </table>
                 
-                {enrollments.length === 0 && (
+                {filteredEnrollments.length === 0 && (
                   <div className="text-center py-12">
                     <Activity className="w-12 h-12 text-slate-500 mx-auto mb-4" />
                     <p className="text-slate-400">No enrollments found</p>
@@ -789,14 +1063,22 @@ const Admin = () => {
                   </div>
                 )}
               </div>
-            </div>
+              <Pagination />
+            </motion.div>
           )}
 
           {activeTab === 'settings' && (
-            <div className="bg-[#091328] rounded-2xl border border-white/5 p-6">
+            <motion.div
+              key="settings"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+              className="bg-white dark:bg-[#091328] rounded-2xl border border-gray-200 dark:border-white/5 p-6 shadow-sm"
+            >
               <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
                 <Settings className="w-5 h-5 text-[#5764f1]" />
-                Admin Settings
+                System Settings
               </h2>
               <div className="space-y-6 max-w-2xl">
                 <div>
@@ -827,8 +1109,9 @@ const Admin = () => {
                   Save Settings
                 </button>
               </div>
-            </div>
+            </motion.div>
           )}
+          </AnimatePresence>
         </div>
       </main>
 
@@ -1082,40 +1365,45 @@ const Admin = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {users.slice(0, 10).map((user) => (
-                      <tr key={user._id} className="border-b border-white/5 hover:bg-[#091328] transition">
-                        <td className="py-3 px-4">
-                          <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 bg-gradient-to-br from-[#5764f1] to-[#c081ff] rounded-lg flex items-center justify-center">
-                              <UserIcon className="w-4 h-4 text-white" />
+                    {users.slice(0, 10).map((user) => {
+                      const courseCount = getUserEnrollmentCount(user._id);
+                      const avgProgress = getUserAverageProgress(user._id);
+                      
+                      return (
+                        <tr key={user._id} className="border-b border-white/5 hover:bg-[#091328] transition">
+                          <td className="py-3 px-4">
+                            <div className="flex items-center gap-2">
+                              <div className="w-8 h-8 bg-gradient-to-br from-[#5764f1] to-[#c081ff] rounded-lg flex items-center justify-center">
+                                <UserIcon className="w-4 h-4 text-white" />
+                              </div>
+                              <span className="font-medium text-white">{user.name}</span>
                             </div>
-                            <span className="font-medium text-white">{user.name}</span>
-                          </div>
-                        </td>
-                        <td className="py-3 px-4 text-slate-400">{user.email}</td>
-                        <td className="py-3 px-4">
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            user.role === 'admin' ? 'bg-red-500/20 text-red-400' :
-                            user.role === 'instructor' ? 'bg-blue-500/20 text-blue-400' :
-                            'bg-green-500/20 text-green-400'
-                          }`}>
-                            {user.role}
-                          </span>
-                        </td>
-                        <td className="py-3 px-4 text-slate-400">{Math.floor(Math.random() * 10) + 1}</td>
-                        <td className="py-3 px-4">
-                          <div className="flex items-center gap-2">
-                            <div className="w-24 h-2 bg-[#192540] rounded-full overflow-hidden">
-                              <div 
-                                className="h-full bg-gradient-to-r from-[#5764f1] to-[#c081ff]"
-                                style={{ width: `${Math.floor(Math.random() * 100)}%` }}
-                              />
+                          </td>
+                          <td className="py-3 px-4 text-slate-400">{user.email}</td>
+                          <td className="py-3 px-4">
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              user.role === 'admin' ? 'bg-red-500/20 text-red-400' :
+                              user.role === 'instructor' ? 'bg-blue-500/20 text-blue-400' :
+                              'bg-green-500/20 text-green-400'
+                            }`}>
+                              {user.role}
+                            </span>
+                          </td>
+                          <td className="py-3 px-4 text-slate-400">{courseCount}</td>
+                          <td className="py-3 px-4">
+                            <div className="flex items-center gap-2">
+                              <div className="w-24 h-2 bg-[#192540] rounded-full overflow-hidden">
+                                <div 
+                                  className="h-full bg-gradient-to-r from-[#5764f1] to-[#c081ff]"
+                                  style={{ width: `${avgProgress}%` }}
+                                />
+                              </div>
+                              <span className="text-sm text-slate-400">{avgProgress}%</span>
                             </div>
-                            <span className="text-sm text-slate-400">{Math.floor(Math.random() * 100)}%</span>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -1174,22 +1462,28 @@ const Admin = () => {
             <div className="mt-6">
               <h4 className="text-lg font-bold text-white mb-4">Course Performance</h4>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {courses.slice(0, 6).map((course) => (
-                  <div key={course._id} className="bg-[#0f1930] rounded-xl p-4 border border-white/5">
-                    <h5 className="font-medium text-white mb-2">{course.title || 'Course'}</h5>
-                    <div className="flex justify-between text-sm mb-2">
-                      <span className="text-slate-400">Students</span>
-                      <span className="text-white font-medium">{Math.floor(Math.random() * 100) + 20}</span>
+                {courses.slice(0, 6).map((course) => {
+                  const studentCount = course.enrolledStudents?.length || 0;
+                  // For completion, we use the course's own average if available, otherwise 0
+                  const completionRate = course.averageCompletion || 0;
+                  
+                  return (
+                    <div key={course._id} className="bg-[#0f1930] rounded-xl p-4 border border-white/5">
+                      <h5 className="font-medium text-white mb-2">{course.title || 'Course'}</h5>
+                      <div className="flex justify-between text-sm mb-2">
+                        <span className="text-slate-400">Students</span>
+                        <span className="text-white font-medium">{studentCount}</span>
+                      </div>
+                      <div className="w-full h-2 bg-[#192540] rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-gradient-to-r from-green-400 to-[#5764f1]"
+                          style={{ width: `${completionRate}%` }}
+                        />
+                      </div>
+                      <p className="text-xs text-slate-500 mt-1">{completionRate}% average completion</p>
                     </div>
-                    <div className="w-full h-2 bg-[#192540] rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-gradient-to-r from-green-400 to-[#5764f1]"
-                        style={{ width: `${Math.floor(Math.random() * 60) + 40}%` }}
-                      />
-                    </div>
-                    <p className="text-xs text-slate-500 mt-1">{Math.floor(Math.random() * 60) + 40}% completion</p>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           </div>

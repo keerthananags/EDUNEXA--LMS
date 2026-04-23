@@ -107,6 +107,47 @@ app.get("/api/ai/health", async (req, res) => {
   }
 });
 
+// Direct API key test (simpler test)
+app.get("/api/ai/test-key", async (req, res) => {
+  const { GoogleGenerativeAI } = require("@google/generative-ai");
+  const apiKey = process.env.GEMINI_API_KEY;
+  
+  if (!apiKey) {
+    return res.json({ success: false, error: "No API key" });
+  }
+  
+  try {
+    console.log("🧪 Testing API key:", apiKey.substring(0, 15) + "...");
+    const genAI = new GoogleGenerativeAI(apiKey);
+    console.log("✅ GoogleGenerativeAI created");
+    
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-002" });
+    console.log("✅ Model created");
+    
+    const result = await model.generateContent("Hi");
+    console.log("✅ generateContent called");
+    
+    const text = result.response.text();
+    console.log("✅ Response received:", text.substring(0, 30));
+    
+    res.json({ success: true, response: text.substring(0, 50) });
+  } catch (err) {
+    console.error("❌ API Key Test Failed:");
+    console.error("   Message:", err.message);
+    console.error("   Status:", err.status);
+    console.error("   Code:", err.code);
+    console.error("   Stack:", err.stack);
+    
+    res.json({ 
+      success: false, 
+      error: err.message,
+      status: err.status,
+      code: err.code,
+      fullError: err.toString()
+    });
+  }
+});
+
 /* ========================
    ROUTES (WITH DEBUG LOGS)
 ======================== */
